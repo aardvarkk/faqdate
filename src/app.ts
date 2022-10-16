@@ -15,11 +15,18 @@ const statuses = document.getElementById("statuses") as HTMLDivElement;
 function statusCircle(valid: boolean) {
   const container = document.createElement("div");
   container.className = "status-container";
-  container.innerHTML = "&nbsp;";
-  const circle = document.createElement("div");
-  circle.className = "status-circle";
-  circle.style.backgroundColor = valid ? "red" : "black";
-  container.appendChild(circle);
+  const span = document.createElement("span");
+  span.innerHTML = valid ? "&nbsp;" : "!";
+  span.title = "Hello";
+  container.appendChild(span);
+
+  if (valid) {
+    const circle = document.createElement("div");
+    circle.className = "status-circle";
+    circle.style.backgroundColor = "red";
+    container.appendChild(circle);
+  }
+
   return container;
 }
 

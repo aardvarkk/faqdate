@@ -8,14 +8,21 @@
   font-size: 16px;
 }
 
+/* Borders must match to have proper alignment */
+#statuses,
+textarea {
+  border: 2px solid;
+}
+
 #statuses {
-  border-top: 2px solid transparent;
+  border-color: transparent;
   padding: 0.5em;
 }
 
 .status-container {
   position: relative;
   width: 14px;
+  text-align: center;
 }
 
 .status-circle {
@@ -27,6 +34,7 @@
 }
 
 textarea {
+  border-color: lightgray;
   padding: 0.5em;
   white-space: pre;
   resize: none;
