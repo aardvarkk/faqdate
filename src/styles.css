@@ -4,8 +4,9 @@
   margin: 0;
 }
 
+/* Define 1rem */
 :root {
-  font-size: 16px;
+  font-size: 13px;
 }
 
 /* Borders must match to have proper alignment */
@@ -27,9 +28,9 @@ textarea {
 
 .status-circle {
   position: absolute;
-  top: 1px;
-  width: 14px;
-  height: 14px;
+  top: 0px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
 }
 
@@ -38,5 +39,15 @@ textarea {
   padding: 0.5em;
   white-space: pre;
   resize: none;
-  width: 100%;
+  min-width: 50ch;
+  font-size: 12px;
+}
+
+#timelines {
+  padding: 3em;
+  height: 100vh;
+}
+
+svg {
+  display: block;
 }

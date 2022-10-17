@@ -16,6 +16,7 @@
     "ts-jest": "^29.0.3"
   },
   "dependencies": {
+    "@svgdotjs/svg.js": "^3.1.2",
     "dayjs": "^1.11.5"
   }
 }

@@ -1,5 +1,6 @@
 import dayjs, { Dayjs } from "dayjs";
 import { toDayjs } from "./toDayjs";
+import { Svg, SVG } from "@svgdotjs/svg.js";
 
 type Entry = {
   text: string;
@@ -8,9 +9,12 @@ type Entry = {
 
 let text: string = "";
 let entries: Array<Entry> = [];
+let timezones: Array<string>;
 
 const textarea = document.getElementById("textarea") as HTMLTextAreaElement;
 const statuses = document.getElementById("statuses") as HTMLDivElement;
+const timelineSvg = document.getElementById("timeline-svg")!;
+const timelines = SVG("#timeline-svg").size("100%", "100%") as Svg;
 
 function statusCircle(valid: boolean) {
   const container = document.createElement("div");
@@ -48,9 +52,19 @@ textarea.addEventListener("input", (ev) => {
   parseTextArea();
 });
 
-function setTextArea(text: string) {
+function drawTimelines() {
+  const h = timelineSvg.clientHeight / timezones.length;
+  const w = timelineSvg.clientWidth;
+  for (const [idx, tz] of timezones.entries()) {
+    const y = idx * h + h / 2;
+    timelines.line(0, y, w, y).stroke({ color: "gray" });
+  }
+}
+
+function refresh(text: string) {
   textarea.value = text;
   textarea.dispatchEvent(new Event("input"));
+  drawTimelines();
 }
 
 addEventListener("paste", (ev) => {
@@ -62,7 +76,8 @@ addEventListener("paste", (ev) => {
     text += "\n";
   }
   text += (ev as ClipboardEvent).clipboardData.getData("text");
-  setTextArea(text);
+  refresh(text);
 });
 
-setTextArea(dayjs().format());
+timezones = [dayjs.tz.guess(), "UTC"];
+refresh(`${dayjs().format()}\n2022-10-16`);

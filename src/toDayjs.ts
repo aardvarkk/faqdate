@@ -42,6 +42,8 @@ export function toDayjs(raw: string): Dayjs | undefined {
 
     // Parsed without assistance
     if (parsed.isValid()) {
+      console.log(dayjs.tz(text, "UTC").toISOString());
+      console.log(dayjs.tz(text, "Etc/GMT+1").toISOString());
       return parsed;
     }
     // Check for a timezone as a fallback
