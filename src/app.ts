@@ -1,11 +1,6 @@
-import dayjs, { Dayjs } from "dayjs";
-import { toDayjs } from "./toDayjs";
+import { DateTime } from "luxon";
+import { Entry, toEntry } from "./toEntry";
 import { Svg, SVG } from "@svgdotjs/svg.js";
-
-type Entry = {
-  text: string;
-  parsed: Dayjs | undefined;
-};
 
 let text: string = "";
 let entries: Array<Entry> = [];
@@ -37,13 +32,14 @@ function statusCircle(valid: boolean) {
 function updateStatus() {
   statuses.innerHTML = "";
   entries.forEach((e) => {
-    statuses.appendChild(statusCircle(e.parsed?.isValid()));
+    statuses.appendChild(statusCircle(e.parsed?.isValid));
   });
 }
 
 function parseTextArea() {
   text = textarea.value;
-  entries = text.split("\n").map((t) => ({ text: t, parsed: toDayjs(t) }));
+  entries = text.split("\n").map(toEntry);
+  console.log({ entries });
   textarea.setAttribute("rows", (entries.length + 1).toString());
   updateStatus();
 }
@@ -79,5 +75,6 @@ addEventListener("paste", (ev) => {
   refresh(text);
 });
 
-timezones = [dayjs.tz.guess(), "UTC"];
-refresh(`${dayjs().format()}\n2022-10-16`);
+timezones = [DateTime.local().zoneName, "UTC"];
+console.log({ timezones });
+refresh(`${DateTime.now().toISO()}\n2022-10-16`);
