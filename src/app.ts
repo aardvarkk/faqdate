@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import { Entry, toEntry } from "./toEntry";
-import { Svg, SVG, Color } from "@svgdotjs/svg.js";
+import { Svg, SVG, Color, Circle } from "@svgdotjs/svg.js";
 
 let text: string = "";
 let entries: Array<Entry> = [];
@@ -11,25 +11,34 @@ const statuses = document.getElementById("statuses") as HTMLDivElement;
 const timelineSvg = document.getElementById("timeline-svg")!;
 const timelines = SVG("#timeline-svg").size("100%", "100%") as Svg;
 
-function colorForIndex(idx: number) {
-  const h = (idx * 360) / entries.length;
+function colorForIndex(sortedIdx: number) {
+  const h = (sortedIdx * 360) / entries.length;
   return new Color(h, 80, 50, "hsl");
 }
 
-function statusCircle(valid: boolean, idx: number) {
+function fillAndStroke(circle: Circle, sortedIdx: number) {
+  const isMoment = sortedEntries()[sortedIdx].moment;
+  if (isMoment) {
+    circle.fill(colorForIndex(sortedIdx));
+  } else {
+    circle.fill("#fff").stroke({ color: colorForIndex(sortedIdx).toString() });
+  }
+}
+
+function statusBadge(valid: boolean, idx: number) {
   const container = document.createElement("div");
   container.className = "status-container";
 
   const span = document.createElement("span");
   span.innerHTML = valid ? "&nbsp;" : "!";
-  span.title = "Hello";
+  span.title = "Unparseable";
   container.appendChild(span);
 
   if (valid) {
-    const circle = document.createElement("div");
-    circle.className = "status-circle";
-    circle.style.backgroundColor = colorForIndex(idx).toString();
-    container.appendChild(circle);
+    const svg = SVG().size("100%", "100%").addTo(container);
+    const clipCircle = svg.circle("80%");
+    const clip = svg.clip().add(clipCircle);
+    fillAndStroke(svg.circle("80%").stroke({ width: 6 }).clipWith(clip), idx);
   }
 
   return container;
@@ -53,7 +62,7 @@ function updateStatus() {
   const sorted = sortedEntries();
   entries.forEach((e, idx) => {
     statuses.appendChild(
-      statusCircle(
+      statusBadge(
         e.parsed?.isValid === true,
         sorted.findIndex((s) => s.line === idx)
       )
@@ -112,11 +121,31 @@ function drawTimelines() {
   for (const [idx, tzTimes] of timezoneTimes.entries()) {
     for (const [entryIdx, t] of tzTimes.entries()) {
       const y = idx * h + h / 2;
-      timelines
-        .circle(20)
-        .center((w * (t.toMillis() - minMs)) / (maxMs - minMs), y)
-        .fill(colorForIndex(entryIdx));
+
+      fillAndStroke(
+        timelines
+          .circle(20)
+          .center(
+            range > 0 ? (w * (t.toMillis() - minMs)) / (maxMs - minMs) : w / 2,
+            y
+          )
+          .stroke({ width: 4 }),
+        entryIdx
+      );
     }
+  }
+
+  // Write top and bottom timezone labels and center times
+  for (const [idx, tz] of timezones.entries()) {
+    const y = idx * h;
+    // const timeStr = DateTime.fromMillis(minMs + range / 2, {
+    //   zone: tz,
+    // }).toISO();
+    timelines
+      .text(tz)
+      .x(w / 2)
+      .y(y)
+      .font({ anchor: "middle", alignmentBaseline: "top" });
   }
 }
 
@@ -138,6 +167,12 @@ addEventListener("paste", (ev) => {
   refresh();
 });
 
+document.querySelector("body")!.onresize = refresh;
+
 timezones = [DateTime.local().zoneName, "UTC"];
-textarea.value = `${DateTime.now().toISO()}\n2022-10-16`;
+textarea.value = [
+  DateTime.now().toISO(),
+  "2022-10-16",
+  "Mon Oct 17 2022 22:44:09 GMT-0700",
+].join("\n");
 refresh();

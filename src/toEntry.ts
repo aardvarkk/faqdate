@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime, DateTimeOptions } from "luxon";
 
 export type Entry = {
   line: number;
@@ -6,6 +6,21 @@ export type Entry = {
   parsed: DateTime | undefined;
   moment: boolean; // True if it's an "absolute" time, false if it depends on offset/timezone
 };
+
+function isMoment(
+  parseFn: (text: string, opts: DateTimeOptions) => DateTime,
+  text: string
+) {
+  const a = parseFn(text, {
+    zone: "Etc/UTC",
+    setZone: true,
+  });
+  const b = parseFn(text, {
+    zone: "Etc/UTC+1",
+    setZone: true,
+  });
+  return a.toMillis() === b.toMillis();
+}
 
 export function toEntry(raw: string, line: number): Entry {
   const text = raw.trim();
@@ -35,26 +50,41 @@ export function toEntry(raw: string, line: number): Entry {
         moment: true,
       };
     }
-  } else {
+  }
+  // String
+  else {
     const fromHTTP = DateTime.fromHTTP(text);
     const fromISO = DateTime.fromISO(text);
     const fromRFC2822 = DateTime.fromRFC2822(text);
     const fromSQL = DateTime.fromSQL(text);
 
     if (fromISO.isValid) {
-      const a = DateTime.fromISO(text, {
-        zone: "Etc/UTC",
-        setZone: true,
-      });
-      const b = DateTime.fromISO(text, {
-        zone: "Etc/UTC+1",
-        setZone: true,
-      });
       return {
         line,
         text,
         parsed: fromISO,
-        moment: a.toMillis() === b.toMillis(),
+        moment: isMoment(DateTime.fromISO, text),
+      };
+    } else if (fromHTTP.isValid) {
+      return {
+        line,
+        text,
+        parsed: fromHTTP,
+        moment: isMoment(DateTime.fromHTTP, text),
+      };
+    } else if (fromRFC2822.isValid) {
+      return {
+        line,
+        text,
+        parsed: fromRFC2822,
+        moment: isMoment(DateTime.fromRFC2822, text),
+      };
+    } else if (fromSQL.isValid) {
+      return {
+        line,
+        text,
+        parsed: fromSQL,
+        moment: isMoment(DateTime.fromSQL, text),
       };
     } else {
       return {
