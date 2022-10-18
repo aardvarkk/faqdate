@@ -64,7 +64,6 @@ function updateStatus() {
 function parseTextArea() {
   text = textarea.value;
   entries = text.split("\n").map(toEntry);
-  console.log({ entries });
   textarea.setAttribute("rows", (entries.length + 1).toString());
   updateStatus();
 }
@@ -84,11 +83,6 @@ function drawTimelines() {
 
   const timezoneTimes: Array<Array<DateTime>> = new Array(timezones.length);
 
-  console.log(
-    "SORTED",
-    sortedEntries().map((s) => s.parsed!.toISO())
-  );
-
   // Collect stats and create times adjusted to each timezone
   for (const [idx, tz] of timezones.entries()) {
     const y = idx * h + h / 2;
@@ -104,8 +98,6 @@ function drawTimelines() {
 
       const inTz = e.parsed.setZone(tz, { keepLocalTime: !e.moment });
       timezoneTimes[idx].push(inTz);
-      console.log(inTz.toISO());
-      console.log({ timezoneTimes });
 
       minMs = Math.min(minMs, inTz.toMillis());
       maxMs = Math.max(maxMs, inTz.toMillis());
@@ -147,6 +139,5 @@ addEventListener("paste", (ev) => {
 });
 
 timezones = [DateTime.local().zoneName, "UTC"];
-console.log({ timezones });
 textarea.value = `${DateTime.now().toISO()}\n2022-10-16`;
 refresh();
