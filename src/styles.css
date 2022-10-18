@@ -6,7 +6,7 @@
 
 /* Define 1rem */
 :root {
-  font-size: 13px;
+  font-size: 12px;
 }
 
 /* Borders must match to have proper alignment */
@@ -40,7 +40,7 @@ textarea {
   white-space: pre;
   resize: none;
   min-width: 50ch;
-  font-size: 12px;
+  font-size: 1rem;
 }
 
 #timelines {

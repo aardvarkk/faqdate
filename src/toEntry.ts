@@ -1,12 +1,13 @@
 import { DateTime } from "luxon";
 
 export type Entry = {
+  line: number;
   text: string;
   parsed: DateTime | undefined;
   moment: boolean; // True if it's an "absolute" time, false if it depends on offset/timezone
 };
 
-export function toEntry(raw: string): Entry | undefined {
+export function toEntry(raw: string, line: number): Entry {
   const text = raw.trim();
 
   const isNumber = /^\d+([.,]\d*)?$/.test(text);
@@ -19,6 +20,7 @@ export function toEntry(raw: string): Entry | undefined {
     // Milliseconds
     if (whole.toString().length >= 13) {
       return {
+        line,
         text,
         parsed: DateTime.fromMillis(number),
         moment: true,
@@ -27,6 +29,7 @@ export function toEntry(raw: string): Entry | undefined {
     // Seconds
     else {
       return {
+        line,
         text,
         parsed: DateTime.fromSeconds(number),
         moment: true,
@@ -48,12 +51,14 @@ export function toEntry(raw: string): Entry | undefined {
         setZone: true,
       });
       return {
+        line,
         text,
         parsed: fromISO,
         moment: a.toMillis() === b.toMillis(),
       };
     } else {
       return {
+        line,
         text,
         parsed: undefined,
         moment: false,
