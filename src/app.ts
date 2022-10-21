@@ -16,7 +16,7 @@ const svg = SVG("#timeline-svg").size("100%", "100%") as Svg;
 
 function colorForIndex(sortedIdx: number) {
   const h = (sortedIdx * 360) / entries.length;
-  return new Color(h, 80, 50, "hsl");
+  return new Color(h, 80, 65, "hsl");
 }
 
 function fillAndStroke(circle: Circle, sortedIdx: number) {
@@ -105,9 +105,20 @@ function drawTimelines() {
   // Collect stats and create times adjusted to each timezone
   for (const [idx, tz] of timezones.entries()) {
     const y = idx * h + h / 2;
+
+    // Main horizontal
+    svg.line(0, y, w, y).stroke({ color: "#eee", width: 2 });
+
+    // Arrows
+    const arrowLen = 6;
+    svg.line(0, y, arrowLen, y - arrowLen).stroke({ color: "#eee", width: 2 });
+    svg.line(0, y, arrowLen, y + arrowLen).stroke({ color: "#eee", width: 2 });
     svg
-      .line(0, y, w, y)
-      .stroke({ color: "#ddd", width: 2, dasharray: "16,16" });
+      .line(w, y, w - arrowLen, y - arrowLen)
+      .stroke({ color: "#eee", width: 2 });
+    svg
+      .line(w, y, w - arrowLen, y + arrowLen)
+      .stroke({ color: "#eee", width: 2 });
 
     timezoneTimes[idx] = [];
     for (const e of sortedEntries()) {
@@ -147,7 +158,7 @@ function drawTimelines() {
 
   // Write timezone labels and center times
   for (const [idx, tz] of timezones.entries()) {
-    const y = idx * h + 6;
+    const y = idx * h + 8;
     // const timeStr = DateTime.fromMillis(minMs + range / 2, {
     //   zone: tz,
     // }).toISO();
@@ -155,7 +166,7 @@ function drawTimelines() {
       .text(tz)
       .x(w / 2)
       .y(y)
-      .font({ anchor: "middle", alignmentBaseline: "top" });
+      .font({ anchor: "middle", alignmentBaseline: "top", weight: "bold" });
   }
 
   // Clear existing buttons
@@ -243,6 +254,7 @@ for (const tz of Intl.supportedValuesOf("timeZone")) {
 }
 
 function addTimezone(tz: string) {
+  removeTimezone(tz); // Clear if it's already there
   timezones.push(tz);
   localStorage.setItem(KEY_TIMEZONES, timezones.join());
   refresh();
