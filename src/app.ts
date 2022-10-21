@@ -2,6 +2,8 @@ import { DateTime } from "luxon";
 import { Entry, toEntry } from "./toEntry";
 import { Svg, SVG, Color, Circle } from "@svgdotjs/svg.js";
 
+const KEY_TIMEZONES = "timezones";
+
 let text: string = "";
 let entries: Array<Entry> = [];
 let timezones: Array<string> = [];
@@ -172,14 +174,27 @@ function drawTimelines() {
     button.style.top = `${y}px`;
     button.style.right = "0";
     button.onclick = () => {
-      timezones = timezones.filter((t) => t != tz);
-      refresh();
+      removeTimezone(tz);
     };
     timelines.appendChild(button);
   }
 }
 
+function sortTimezones() {
+  const now = DateTime.now();
+  timezones.sort((a, b) => {
+    const offseta = now.setZone(a).offset;
+    const offsetb = now.setZone(b).offset;
+    if (offseta !== offsetb) {
+      return offsetb - offseta;
+    } else {
+      return a.localeCompare(b);
+    }
+  });
+}
+
 function refresh() {
+  sortTimezones();
   parseTextArea();
   drawTimelines();
 }
@@ -229,16 +244,13 @@ for (const tz of Intl.supportedValuesOf("timeZone")) {
 
 function addTimezone(tz: string) {
   timezones.push(tz);
-  const now = DateTime.now();
-  timezones.sort((a, b) => {
-    const offseta = now.setZone(a).offset;
-    const offsetb = now.setZone(b).offset;
-    if (offseta !== offsetb) {
-      return offsetb - offseta;
-    } else {
-      return a.localeCompare(b);
-    }
-  });
+  localStorage.setItem(KEY_TIMEZONES, timezones.join());
+  refresh();
+}
+
+function removeTimezone(tz: string) {
+  timezones = timezones.filter((t) => t != tz);
+  localStorage.setItem(KEY_TIMEZONES, timezones.join());
   refresh();
 }
 
@@ -246,5 +258,11 @@ document.getElementById("add-button")!.onclick = () => {
   addTimezone(select.value);
 };
 
-addTimezone("UTC");
-addTimezone(DateTime.local().zoneName);
+// Load
+if (localStorage.getItem(KEY_TIMEZONES)) {
+  timezones = localStorage.getItem(KEY_TIMEZONES)!.split(",");
+  refresh();
+} else {
+  addTimezone("UTC");
+  addTimezone(DateTime.local().zoneName);
+}
