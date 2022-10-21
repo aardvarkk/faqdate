@@ -15,18 +15,24 @@
     />
   </head>
   <body>
-    <div style="min-height: 100vh">
+    <div style="min-height: 100vh; display: flex; flex-direction: column">
       <div style="text-align: center; font-size: 4em; letter-spacing: 0.02em">
         <span style="font-family: 'Titan One'; color: pink">epoch.</span
         ><span style="font-family: 'Titan One'; color: hotpink">lol</span>
       </div>
-      <div style="display: flex">
+      <div style="display: flex; flex: 1">
         <div id="leftbar">
           <div id="statuses"></div>
-          <textarea id="textarea" rows="2"></textarea>
+          <textarea id="textarea"></textarea>
         </div>
-        <div id="timelines">
-          <svg id="timeline-svg"></svg>
+        <div style="display: flex; flex-direction: column; flex: 1">
+          <div id="timelines">
+            <svg id="timeline-svg"></svg>
+          </div>
+          <div id="add-timezone">
+            <select></select>
+            <button id="add-button">+</button>
+          </div>
         </div>
       </div>
     </div>

@@ -4,12 +4,13 @@ import { Svg, SVG, Color, Circle } from "@svgdotjs/svg.js";
 
 let text: string = "";
 let entries: Array<Entry> = [];
-let timezones: Array<string>;
+let timezones: Array<string> = [];
 
 const textarea = document.getElementById("textarea") as HTMLTextAreaElement;
 const statuses = document.getElementById("statuses") as HTMLDivElement;
+const timelines = document.getElementById("timelines") as HTMLDivElement;
 const timelineSvg = document.getElementById("timeline-svg")!;
-const timelines = SVG("#timeline-svg").size("100%", "100%") as Svg;
+const svg = SVG("#timeline-svg").size("100%", "100%") as Svg;
 
 function colorForIndex(sortedIdx: number) {
   const h = (sortedIdx * 360) / entries.length;
@@ -29,16 +30,24 @@ function statusBadge(valid: boolean, idx: number) {
   const container = document.createElement("div");
   container.className = "status-container";
 
-  const span = document.createElement("span");
-  span.innerHTML = valid ? "&nbsp;" : "!";
-  span.title = "Unparseable";
-  container.appendChild(span);
-
   if (valid) {
     const svg = SVG().size("100%", "100%").addTo(container);
-    const clipCircle = svg.circle("80%");
+    const clipCircle = svg.circle("80%").attr("cx", "50%").attr("cy", "50%");
     const clip = svg.clip().add(clipCircle);
-    fillAndStroke(svg.circle("80%").stroke({ width: 6 }).clipWith(clip), idx);
+    fillAndStroke(
+      svg
+        .circle("80%")
+        .attr("cx", "50%")
+        .attr("cy", "50%")
+        .stroke({ width: 6 })
+        .clipWith(clip),
+      idx
+    );
+  } else {
+    const span = document.createElement("span");
+    span.innerHTML = "!";
+    span.title = "Unparseable";
+    container.appendChild(span);
   }
 
   return container;
@@ -73,7 +82,6 @@ function updateStatus() {
 function parseTextArea() {
   text = textarea.value;
   entries = text.split("\n").map(toEntry);
-  textarea.setAttribute("rows", (entries.length + 1).toString());
   updateStatus();
 }
 
@@ -82,7 +90,7 @@ textarea.addEventListener("input", (ev) => {
 });
 
 function drawTimelines() {
-  timelines.clear();
+  svg.clear();
 
   const h = timelineSvg.clientHeight / timezones.length;
   const w = timelineSvg.clientWidth;
@@ -95,7 +103,7 @@ function drawTimelines() {
   // Collect stats and create times adjusted to each timezone
   for (const [idx, tz] of timezones.entries()) {
     const y = idx * h + h / 2;
-    timelines
+    svg
       .line(0, y, w, y)
       .stroke({ color: "#ddd", width: 2, dasharray: "16,16" });
 
@@ -123,7 +131,7 @@ function drawTimelines() {
       const y = idx * h + h / 2;
 
       fillAndStroke(
-        timelines
+        svg
           .circle(20)
           .center(
             range > 0 ? (w * (t.toMillis() - minMs)) / (maxMs - minMs) : w / 2,
@@ -135,17 +143,39 @@ function drawTimelines() {
     }
   }
 
-  // Write top and bottom timezone labels and center times
+  // Write timezone labels and center times
   for (const [idx, tz] of timezones.entries()) {
-    const y = idx * h;
+    const y = idx * h + 6;
     // const timeStr = DateTime.fromMillis(minMs + range / 2, {
     //   zone: tz,
     // }).toISO();
-    timelines
+    svg
       .text(tz)
       .x(w / 2)
       .y(y)
       .font({ anchor: "middle", alignmentBaseline: "top" });
+  }
+
+  // Clear existing buttons
+  document
+    .querySelectorAll(".remove-button")
+    .forEach((e) => e.parentNode!.removeChild(e));
+
+  // Create buttons to remove timezones
+  for (const [idx, tz] of timezones.entries()) {
+    const y = idx * h;
+
+    const button = document.createElement("button");
+    button.textContent = "×";
+    button.className = "remove-button";
+    button.style.position = "absolute";
+    button.style.top = `${y}px`;
+    button.style.right = "0";
+    button.onclick = () => {
+      timezones = timezones.filter((t) => t != tz);
+      refresh();
+    };
+    timelines.appendChild(button);
   }
 }
 
@@ -169,10 +199,52 @@ addEventListener("paste", (ev) => {
 
 document.querySelector("body")!.onresize = refresh;
 
-timezones = [DateTime.local().zoneName, "UTC"];
 textarea.value = [
   DateTime.now().toISO(),
   "2022-10-16",
   "Mon Oct 17 2022 22:44:09 GMT-0700",
 ].join("\n");
 refresh();
+
+declare namespace Intl {
+  type Key =
+    | "calendar"
+    | "collation"
+    | "currency"
+    | "numberingSystem"
+    | "timeZone"
+    | "unit";
+
+  function supportedValuesOf(input: Key): string[];
+}
+const select = document.querySelector(
+  "#add-timezone select"
+)! as HTMLSelectElement;
+for (const tz of Intl.supportedValuesOf("timeZone")) {
+  const option = document.createElement("option");
+  option.text = tz;
+  option.value = tz;
+  select.appendChild(option);
+}
+
+function addTimezone(tz: string) {
+  timezones.push(tz);
+  const now = DateTime.now();
+  timezones.sort((a, b) => {
+    const offseta = now.setZone(a).offset;
+    const offsetb = now.setZone(b).offset;
+    if (offseta !== offsetb) {
+      return offsetb - offseta;
+    } else {
+      return a.localeCompare(b);
+    }
+  });
+  refresh();
+}
+
+document.getElementById("add-button")!.onclick = () => {
+  addTimezone(select.value);
+};
+
+addTimezone("UTC");
+addTimezone(DateTime.local().zoneName);

@@ -57,6 +57,7 @@ export function toEntry(raw: string, line: number): Entry {
     const fromISO = DateTime.fromISO(text);
     const fromRFC2822 = DateTime.fromRFC2822(text);
     const fromSQL = DateTime.fromSQL(text);
+    const fromDate = new Date(text);
 
     if (fromISO.isValid) {
       return {
@@ -85,6 +86,13 @@ export function toEntry(raw: string, line: number): Entry {
         text,
         parsed: fromSQL,
         moment: isMoment(DateTime.fromSQL, text),
+      };
+    } else if (fromDate.toString() !== "Invalid Date") {
+      return {
+        line,
+        text,
+        parsed: DateTime.fromJSDate(fromDate),
+        moment: true,
       };
     } else {
       return {
