@@ -7,12 +7,16 @@ const KEY_TIMEZONES = "timezones";
 let text: string = "";
 let entries: Array<Entry> = [];
 let timezones: Array<string> = [];
+let minMs = Number.MAX_VALUE;
+let maxMs = -Number.MAX_VALUE;
 
 const textarea = document.getElementById("textarea") as HTMLTextAreaElement;
 const statuses = document.getElementById("statuses") as HTMLDivElement;
 const timelines = document.getElementById("timelines") as HTMLDivElement;
-const timelineSvg = document.getElementById("timeline-svg")!;
-const svg = SVG("#timeline-svg").size("100%", "100%") as Svg;
+const svg = SVG("svg").size("100%", "100%") as Svg;
+const l1 = svg.group();
+const l2 = svg.group();
+const l3 = svg.group();
 
 function colorForIndex(sortedIdx: number) {
   const h = (sortedIdx * 360) / entries.length;
@@ -92,13 +96,15 @@ textarea.addEventListener("input", (ev) => {
 });
 
 function drawTimelines() {
-  svg.clear();
+  l1.clear();
+  l2.clear();
+  l3.clear();
 
-  const h = timelineSvg.clientHeight / timezones.length;
-  const w = timelineSvg.clientWidth;
+  const h = timelines.clientHeight / timezones.length;
+  const w = timelines.clientWidth;
 
-  let minMs = Number.MAX_VALUE;
-  let maxMs = -Number.MAX_VALUE;
+  minMs = Number.MAX_VALUE;
+  maxMs = -Number.MAX_VALUE;
 
   const timezoneTimes: Array<Array<DateTime>> = new Array(timezones.length);
 
@@ -107,18 +113,20 @@ function drawTimelines() {
     const y = idx * h + h / 2;
 
     // Main horizontal
-    svg.line(0, y, w, y).stroke({ color: "#eee", width: 2 });
+    l1.line(0, y, w, y).stroke({ color: "#eee", width: 2 });
 
     // Arrows
     const arrowLen = 6;
-    svg.line(0, y, arrowLen, y - arrowLen).stroke({ color: "#eee", width: 2 });
-    svg.line(0, y, arrowLen, y + arrowLen).stroke({ color: "#eee", width: 2 });
-    svg
-      .line(w, y, w - arrowLen, y - arrowLen)
-      .stroke({ color: "#eee", width: 2 });
-    svg
-      .line(w, y, w - arrowLen, y + arrowLen)
-      .stroke({ color: "#eee", width: 2 });
+    l1.line(0, y, arrowLen, y - arrowLen).stroke({ color: "#eee", width: 2 });
+    l1.line(0, y, arrowLen, y + arrowLen).stroke({ color: "#eee", width: 2 });
+    l1.line(w, y, w - arrowLen, y - arrowLen).stroke({
+      color: "#eee",
+      width: 2,
+    });
+    l1.line(w, y, w - arrowLen, y + arrowLen).stroke({
+      color: "#eee",
+      width: 2,
+    });
 
     timezoneTimes[idx] = [];
     for (const e of sortedEntries()) {
@@ -144,13 +152,16 @@ function drawTimelines() {
       const y = idx * h + h / 2;
 
       fillAndStroke(
-        svg
+        l3
           .circle(20)
           .center(
-            range > 0 ? (w * (t.toMillis() - minMs)) / (maxMs - minMs) : w / 2,
+            maxMs - minMs > 0
+              ? (w * (t.toMillis() - minMs)) / (maxMs - minMs)
+              : w / 2,
             y
           )
-          .stroke({ width: 4 }),
+          .stroke({ width: 4 })
+          .attr("pointer-events", "none"),
         entryIdx
       );
     }
@@ -162,11 +173,11 @@ function drawTimelines() {
     // const timeStr = DateTime.fromMillis(minMs + range / 2, {
     //   zone: tz,
     // }).toISO();
-    svg
-      .text(tz)
+    l3.text(tz)
       .x(w / 2)
       .y(y)
-      .font({ anchor: "middle", alignmentBaseline: "top", weight: "bold" });
+      .font({ anchor: "middle", weight: "bold" })
+      .attr("pointer-events", "none");
   }
 
   // Clear existing buttons
@@ -225,11 +236,8 @@ addEventListener("paste", (ev) => {
 
 document.querySelector("body")!.onresize = refresh;
 
-textarea.value = [
-  DateTime.now().toISO(),
-  "2022-10-16",
-  "Mon Oct 17 2022 22:44:09 GMT-0700",
-].join("\n");
+const now = DateTime.now();
+textarea.value = [now.toISO(), now.toISODate()].join("\n");
 refresh();
 
 declare namespace Intl {
@@ -270,11 +278,61 @@ document.getElementById("add-button")!.onclick = () => {
   addTimezone(select.value);
 };
 
-// Load
+// Load previous timezones
 if (localStorage.getItem(KEY_TIMEZONES)) {
   timezones = localStorage.getItem(KEY_TIMEZONES)!.split(",");
   refresh();
-} else {
+}
+// No previous timezones -- make new ones
+else {
   addTimezone("UTC");
   addTimezone(DateTime.local().zoneName);
 }
+
+let offsetX: number | undefined = undefined;
+let offsetY: number | undefined = undefined;
+
+timelines.onmouseenter = (ev) => {
+  offsetX = ev.offsetX;
+  offsetY = ev.offsetY;
+};
+
+function updateCrosshair() {
+  if (!offsetX) {
+    return;
+  }
+
+  l2.clear();
+  l2.line(offsetX, 0, offsetX, timelines.clientHeight).stroke({
+    color: "#666",
+  });
+
+  const w = timelines.clientWidth;
+  const h = timelines.clientHeight / timezones.length;
+  const leftHalf = offsetX <= timelines.clientWidth / 2;
+  for (const [idx, tz] of timezones.entries()) {
+    const y = idx * h + h / 2;
+    const ms = (offsetX / w) * (maxMs - minMs) + minMs;
+    const t = DateTime.fromMillis(ms).setZone(tz).toISO();
+    l2.text(t)
+      .x(offsetX + (leftHalf ? 1 : -1) * 2)
+      .y(y - 14)
+      .font({
+        anchor: leftHalf ? "start" : "end",
+      })
+      .attr("pointer-events", "none");
+  }
+}
+
+timelines.onmousemove = (ev) => {
+  if (ev.target !== svg.node) {
+    return;
+  }
+  offsetX = ev.offsetX;
+  offsetY = ev.offsetY;
+  updateCrosshair();
+};
+
+timelines.onmouseleave = () => {
+  offsetX = offsetY = undefined;
+};

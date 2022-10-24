@@ -64,6 +64,7 @@ textarea {
 
 #add-timezone select {
   padding: 0.5em;
+  background-color: white;
   border: 1px solid darkgray;
   border-radius: 8px;
   height: 100%;
