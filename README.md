@@ -1,5 +1,5 @@
-# Supported Formats
+# epoch.lol
 
-- `Sat 15 Oct 2022 21:21:29 PDT`
-- `1665894899`
-- `1665894899000`
+A tool to experiment with times in various time zones.
+
+Available at [epoch.lol](https://www.epoch.lol)
