@@ -1,6 +1,7 @@
 import { DateTime } from "luxon";
 import { Entry, toEntry } from "./toEntry";
 import { Svg, SVG, Color, Circle } from "@svgdotjs/svg.js";
+import { COPY_ICON } from "./copyIcon";
 
 const KEY_TIMEZONES = "timezones";
 
@@ -165,7 +166,10 @@ function drawTimelines() {
           .attr("pointer-events", "all")
           .attr("cursor", "pointer")
           .on("click", () => {
-            console.log("hi");
+            showModal({
+              tz: timezones[idx],
+              entry: entries[entryIdx],
+            });
           }),
         entryIdx
       );
@@ -194,7 +198,7 @@ function drawTimelines() {
     const y = idx * h;
 
     const button = document.createElement("button");
-    button.textContent = "×";
+    button.innerHTML = `<span>×</span>`;
     button.className = "remove-button";
     button.style.position = "absolute";
     button.style.top = `${y}px`;
@@ -364,3 +368,112 @@ timelines.onmouseleave = () => {
   offsetX = offsetY = undefined;
   l2.clear();
 };
+
+// Modal stuff
+const backdrop = document.querySelector(".modal-backdrop")! as HTMLDivElement;
+const modal = document.querySelector(".modal")! as HTMLDivElement;
+
+enum FormatMethods {
+  ISO = "toISO",
+  SQL = "toSQL",
+  RFC2822 = "toRFC2822",
+  HTTP = "toHTTP",
+  MILLIS = "toMillis",
+  SECS = "toUnixInteger",
+}
+
+function formatName(method: FormatMethods) {
+  switch (method) {
+    case FormatMethods.HTTP:
+      return "HTTP";
+    case FormatMethods.ISO:
+      return "ISO 8601";
+    case FormatMethods.MILLIS:
+      return "Unix (ms)";
+    case FormatMethods.SECS:
+      return "Unix (s)";
+    case FormatMethods.RFC2822:
+      return "RFC 2822";
+    case FormatMethods.SQL:
+      return "SQL";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+function showModal(
+  displayInfo:
+    | {
+        tz: string;
+        entry: Entry;
+      }
+    | undefined
+) {
+  if (displayInfo) {
+    const e = displayInfo.entry;
+
+    const left = document.createElement("div");
+    const badge = statusBadge(true, e.line);
+    left.appendChild(badge);
+
+    const right = document.createElement("div");
+    right.className = "modal-right";
+
+    const title = document.createElement("div");
+    title.className = "modal-title";
+    title.innerText = e.text;
+    right.appendChild(title);
+
+    const tz = document.createElement("div");
+    tz.innerText = displayInfo.tz;
+    right.appendChild(tz);
+
+    // Output formats
+    const table = document.createElement("table");
+    for (const format of Object.values(FormatMethods)) {
+      const row = document.createElement("tr");
+
+      const name = document.createElement("td");
+      name.innerText = formatName(format);
+      row.appendChild(name);
+
+      const value = document.createElement("td");
+      const inTz = e.parsed!.setZone(displayInfo.tz, {
+        keepLocalTime: !e.moment,
+      });
+      const text = inTz[format]().toString();
+      value.innerText = text;
+      row.appendChild(value);
+
+      const copy = document.createElement("td");
+      const button = document.createElement("button");
+      button.innerHTML = COPY_ICON;
+      button.addEventListener("click", () => {
+        navigator.clipboard.writeText(text);
+      });
+      copy.appendChild(button);
+      row.appendChild(copy);
+
+      table.appendChild(row);
+    }
+    right.appendChild(table);
+
+    modal.replaceChildren(left, right);
+  }
+
+  const visibility = displayInfo ? "visible" : "hidden";
+  backdrop.style.visibility = visibility;
+  modal.style.visibility = visibility;
+}
+
+// Hide when clicking backdrop
+backdrop.addEventListener("click", () => {
+  showModal(undefined);
+});
+
+// Allow ESC to quit modal
+document.querySelector("body")!.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape") {
+    showModal(undefined);
+  }
+});
