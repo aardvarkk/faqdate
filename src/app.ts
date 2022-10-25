@@ -28,7 +28,7 @@ function fillAndStroke(circle: Circle, sortedIdx: number) {
   if (isMoment) {
     circle.fill(colorForIndex(sortedIdx));
   } else {
-    circle.fill("#fff").stroke({ color: colorForIndex(sortedIdx).toString() });
+    circle.fill("none").stroke({ color: colorForIndex(sortedIdx).toString() });
   }
 }
 
@@ -152,7 +152,7 @@ function drawTimelines() {
       const y = idx * h + h / 2;
 
       fillAndStroke(
-        l3
+        l1
           .circle(20)
           .center(
             maxMs - minMs > 0
@@ -160,8 +160,7 @@ function drawTimelines() {
               : w / 2,
             y
           )
-          .stroke({ width: 4 })
-          .attr("pointer-events", "none"),
+          .stroke({ width: 4 }),
         entryIdx
       );
     }
@@ -176,8 +175,7 @@ function drawTimelines() {
     l3.text(tz)
       .x(w / 2)
       .y(y)
-      .font({ anchor: "middle", weight: "bold" })
-      .attr("pointer-events", "none");
+      .font({ anchor: "middle", weight: "bold" });
   }
 
   // Clear existing buttons
@@ -302,25 +300,49 @@ function updateCrosshair() {
     return;
   }
 
+  const w = timelines.clientWidth;
+  const h = timelines.clientHeight / timezones.length;
+
+  // Get all ms values for entries
+  const allMs: Set<number> = new Set();
+  for (const e of entries) {
+    for (const tz of timezones) {
+      if (e.parsed) {
+        const inTz = e.parsed.setZone(tz, { keepLocalTime: !e.moment });
+        allMs.add(inTz.toMillis());
+      }
+    }
+  }
+
+  // Get a snapped ms based on physical proximity in px to known ms value
+  // Default to a value based on pixel offset
+  let snappedMs = (offsetX / w) * (maxMs - minMs) + minMs;
+  for (const ms of allMs) {
+    const msX = ((ms - minMs) / (maxMs - minMs)) * w;
+    console.log(offsetX, msX, offsetX - msX);
+    if (Math.abs(offsetX - msX) <= 10) {
+      snappedMs = ms;
+      offsetX = msX;
+    }
+  }
+
   l2.clear();
+
   l2.line(offsetX, 0, offsetX, timelines.clientHeight).stroke({
     color: "#666",
   });
 
-  const w = timelines.clientWidth;
-  const h = timelines.clientHeight / timezones.length;
+  const t = DateTime.fromMillis(snappedMs);
+
   const leftHalf = offsetX <= timelines.clientWidth / 2;
   for (const [idx, tz] of timezones.entries()) {
     const y = idx * h + h / 2;
-    const ms = (offsetX / w) * (maxMs - minMs) + minMs;
-    const t = DateTime.fromMillis(ms).setZone(tz).toISO();
-    l2.text(t)
+    l2.text(t.setZone(tz).toISO())
       .x(offsetX + (leftHalf ? 1 : -1) * 2)
       .y(y - 14)
       .font({
         anchor: leftHalf ? "start" : "end",
-      })
-      .attr("pointer-events", "none");
+      });
   }
 }
 
@@ -335,4 +357,5 @@ timelines.onmousemove = (ev) => {
 
 timelines.onmouseleave = () => {
   offsetX = offsetY = undefined;
+  l2.clear();
 };

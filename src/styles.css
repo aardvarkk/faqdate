@@ -10,6 +10,10 @@
   line-height: 1.5;
 }
 
+body {
+  background-color: hsl(36, 100%, 98%);
+}
+
 #leftbar {
   display: flex;
   padding: 2em 0 2em 0em;
@@ -91,4 +95,8 @@ button:hover {
 
 svg {
   display: block;
+}
+
+svg > * {
+  pointer-events: none;
 }
