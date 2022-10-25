@@ -147,6 +147,7 @@ function drawTimelines() {
   minMs -= range * 0.1;
   maxMs += range * 0.1;
 
+  // Draw actual circles
   for (const [idx, tzTimes] of timezoneTimes.entries()) {
     for (const [entryIdx, t] of tzTimes.entries()) {
       const y = idx * h + h / 2;
@@ -160,7 +161,12 @@ function drawTimelines() {
               : w / 2,
             y
           )
-          .stroke({ width: 4 }),
+          .stroke({ width: 4 })
+          .attr("pointer-events", "all")
+          .attr("cursor", "pointer")
+          .on("click", () => {
+            console.log("hi");
+          }),
         entryIdx
       );
     }
@@ -319,7 +325,6 @@ function updateCrosshair() {
   let snappedMs = (offsetX / w) * (maxMs - minMs) + minMs;
   for (const ms of allMs) {
     const msX = ((ms - minMs) / (maxMs - minMs)) * w;
-    console.log(offsetX, msX, offsetX - msX);
     if (Math.abs(offsetX - msX) <= 10) {
       snappedMs = ms;
       offsetX = msX;
@@ -339,7 +344,7 @@ function updateCrosshair() {
     const y = idx * h + h / 2;
     l2.text(t.setZone(tz).toISO())
       .x(offsetX + (leftHalf ? 1 : -1) * 2)
-      .y(y - 14)
+      .y(y + 14)
       .font({
         anchor: leftHalf ? "start" : "end",
       });
