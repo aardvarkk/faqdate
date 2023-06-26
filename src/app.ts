@@ -328,7 +328,7 @@ function updateCrosshair() {
   // Default to a value based on pixel offset
   let snappedMs = (offsetX / w) * (maxMs - minMs) + minMs;
   for (const ms of allMs) {
-    const msX = ((ms - minMs) / (maxMs - minMs)) * w;
+    const msX = maxMs > minMs ? ((ms - minMs) / (maxMs - minMs)) * w : w / 2;
     if (Math.abs(offsetX - msX) <= 12) {
       snappedMs = ms;
       offsetX = msX;
