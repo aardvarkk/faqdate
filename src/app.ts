@@ -374,7 +374,7 @@ function updateCrosshair() {
     const y = idx * h + h / 2;
 
     // Absolute time
-    l2.text(t.setZone(tz).toISO())
+    l2.text(t.setZone(tz).toISO({ suppressMilliseconds: true }))
       .x(offsetX + (leftHalf ? 1 : -1) * 2)
       .y(y + 19)
       .font({
@@ -478,7 +478,10 @@ function showModal(
       const inTz = e.parsed!.setZone(displayInfo.tz, {
         keepLocalTime: !e.moment,
       });
-      const text = inTz[format]().toString();
+      const text =
+        format === "toISO"
+          ? inTz[format]({ suppressMilliseconds: true }).toString()
+          : inTz[format]().toString();
       value.innerText = text;
       row.appendChild(value);
 
