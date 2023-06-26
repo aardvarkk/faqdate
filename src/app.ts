@@ -329,7 +329,7 @@ function updateCrosshair() {
   let snappedMs = (offsetX / w) * (maxMs - minMs) + minMs;
   for (const ms of allMs) {
     const msX = ((ms - minMs) / (maxMs - minMs)) * w;
-    if (Math.abs(offsetX - msX) <= 10) {
+    if (Math.abs(offsetX - msX) <= 12) {
       snappedMs = ms;
       offsetX = msX;
     }
