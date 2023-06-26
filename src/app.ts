@@ -233,6 +233,14 @@ function refresh() {
 }
 
 addEventListener("paste", (ev) => {
+  // Allow "normal" paste behaviour to occur if you pasted inside textarea
+  // `input` event will handle it
+  if (ev.target === textarea) {
+    return;
+  }
+
+  // Allow "global" paste behaviour if you pasted outside textarea
+
   // Prevent 'input' event from also firing
   // if we're pasting inside the input
   ev.preventDefault();
