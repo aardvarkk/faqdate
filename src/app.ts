@@ -293,6 +293,7 @@ for (const tz of Intl.supportedValuesOf("timeZone")) {
   option.value = tz;
   select.appendChild(option);
 }
+select.value = DateTime.now().zoneName;
 
 function addTimezone(tz: string) {
   removeTimezone(tz); // Clear if it's already there
