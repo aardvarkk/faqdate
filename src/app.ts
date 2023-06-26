@@ -113,18 +113,21 @@ function drawTimelines() {
   for (const [idx, tz] of timezones.entries()) {
     const y = idx * h + h / 2;
 
+    // Put the timeline lines into a group for organizational purposes
+    const tl = l1.group();
+
     // Main horizontal
-    l1.line(0, y, w, y).stroke({ color: "#eee", width: 2 });
+    tl.line(0, y, w, y).stroke({ color: "#eee", width: 2 });
 
     // Arrows
     const arrowLen = 6;
-    l1.line(0, y, arrowLen, y - arrowLen).stroke({ color: "#eee", width: 2 });
-    l1.line(0, y, arrowLen, y + arrowLen).stroke({ color: "#eee", width: 2 });
-    l1.line(w, y, w - arrowLen, y - arrowLen).stroke({
+    tl.line(0, y, arrowLen, y - arrowLen).stroke({ color: "#eee", width: 2 });
+    tl.line(0, y, arrowLen, y + arrowLen).stroke({ color: "#eee", width: 2 });
+    tl.line(w, y, w - arrowLen, y - arrowLen).stroke({
       color: "#eee",
       width: 2,
     });
-    l1.line(w, y, w - arrowLen, y + arrowLen).stroke({
+    tl.line(w, y, w - arrowLen, y + arrowLen).stroke({
       color: "#eee",
       width: 2,
     });
