@@ -300,7 +300,7 @@ else {
 let offsetX: number | undefined = undefined;
 let offsetY: number | undefined = undefined;
 
-timelines.onmouseenter = (ev) => {
+timelines.onmouseover = (ev) => {
   offsetX = ev.offsetX;
   offsetY = ev.offsetY;
 };
@@ -356,15 +356,12 @@ function updateCrosshair() {
 }
 
 timelines.onmousemove = (ev) => {
-  if (ev.target !== svg.node) {
-    return;
-  }
   offsetX = ev.offsetX;
   offsetY = ev.offsetY;
   updateCrosshair();
 };
 
-timelines.onmouseleave = () => {
+timelines.onmouseout = () => {
   offsetX = offsetY = undefined;
   l2.clear();
 };
