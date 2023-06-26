@@ -441,6 +441,10 @@ function showModal(
     tz.innerText = displayInfo.tz;
     right.appendChild(tz);
 
+    const subtitle = document.createElement("div");
+    subtitle.innerText = e.parsed?.toRelative() ?? "";
+    right.appendChild(subtitle);
+
     // Output formats
     const table = document.createElement("table");
     for (const format of Object.values(FormatMethods)) {
