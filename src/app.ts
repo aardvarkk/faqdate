@@ -198,6 +198,9 @@ function drawTimelines() {
     const y = idx * h;
 
     const button = document.createElement("button");
+    button.onmousemove = (ev) => {
+      ev.stopPropagation();
+    };
     button.innerHTML = `<span>×</span>`;
     button.className = "remove-button";
     button.style.position = "absolute";
