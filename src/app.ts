@@ -1,7 +1,7 @@
+import { Circle, Color, SVG, Svg } from "@svgdotjs/svg.js";
 import { DateTime } from "luxon";
-import { Entry, toEntry } from "./toEntry";
-import { Svg, SVG, Color, Circle } from "@svgdotjs/svg.js";
 import { COPY_ICON } from "./copyIcon";
+import { Entry, toEntry } from "./toEntry";
 
 const KEY_TIMEZONES = "timezones";
 
