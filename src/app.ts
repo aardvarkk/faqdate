@@ -244,8 +244,11 @@ addEventListener("paste", (ev) => {
 
 document.querySelector("body")!.onresize = refresh;
 
-const now = DateTime.now();
-textarea.value = [now.toISO(), now.toISODate()].join("\n");
+const now = DateTime.now().startOf("minute");
+textarea.value = [
+  now.toISO({ suppressMilliseconds: true }),
+  now.toISODate(),
+].join("\n");
 refresh();
 
 declare namespace Intl {
