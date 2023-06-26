@@ -15,9 +15,9 @@ const textarea = document.getElementById("textarea") as HTMLTextAreaElement;
 const statuses = document.getElementById("statuses") as HTMLDivElement;
 const timelines = document.getElementById("timelines") as HTMLDivElement;
 const svg = SVG("svg").size("100%", "100%") as Svg;
-const l1 = svg.group();
-const l2 = svg.group();
-const l3 = svg.group();
+const l1 = svg.group(); // Timelines and circles
+const l2 = svg.group(); // Verticle line and timestamps
+const l3 = svg.group(); // Timezone labels
 
 function colorForIndex(sortedIdx: number) {
   const h = (sortedIdx * 360) / entries.length;
