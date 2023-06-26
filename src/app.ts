@@ -352,9 +352,19 @@ function updateCrosshair() {
   const leftHalf = offsetX <= timelines.clientWidth / 2;
   for (const [idx, tz] of timezones.entries()) {
     const y = idx * h + h / 2;
+
+    // Absolute time
     l2.text(t.setZone(tz).toISO())
       .x(offsetX + (leftHalf ? 1 : -1) * 2)
       .y(y + 19)
+      .font({
+        anchor: leftHalf ? "start" : "end",
+      });
+
+    // Relative time
+    l2.text(t.setZone(tz).toRelative() ?? "")
+      .x(offsetX + (leftHalf ? 1 : -1) * 2)
+      .y(y + 38)
       .font({
         anchor: leftHalf ? "start" : "end",
       });
