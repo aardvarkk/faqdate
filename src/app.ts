@@ -17,7 +17,8 @@ const timelines = document.getElementById("timelines") as HTMLDivElement;
 const svg = SVG("svg").size("100%", "100%") as Svg;
 const l1 = svg.group(); // Timelines and circles
 const l2 = svg.group(); // Verticle line and timestamps
-const l3 = svg.group(); // Timezone labels
+const l3 = svg.group(); // Timezone background mask
+const l4 = svg.group(); // Timezone background mask
 
 function colorForIndex(sortedIdx: number) {
   const h = (sortedIdx * 360) / entries.length;
@@ -100,6 +101,7 @@ function drawTimelines() {
   l1.clear();
   l2.clear();
   l3.clear();
+  l4.clear();
 
   const h = timelines.clientHeight / timezones.length;
   const w = timelines.clientWidth;
@@ -185,10 +187,16 @@ function drawTimelines() {
     // const timeStr = DateTime.fromMillis(minMs + range / 2, {
     //   zone: tz,
     // }).toISO();
-    l3.text(tz)
+    const label = l4
+      .text(tz)
       .x(w / 2)
       .y(y)
       .font({ anchor: "middle", weight: "bold" });
+
+    // Place box underneath matching background so crosshair doesn't interfere
+    l3.rect(label.bbox().w + 10, label.bbox().h + 10)
+      .center(label.bbox().cx, label.bbox().cy)
+      .fill("var(--bg-color)");
   }
 
   // Clear existing buttons
