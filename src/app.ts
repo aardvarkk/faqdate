@@ -348,7 +348,7 @@ function updateCrosshair() {
     const y = idx * h + h / 2;
     l2.text(t.setZone(tz).toISO())
       .x(offsetX + (leftHalf ? 1 : -1) * 2)
-      .y(y + 14)
+      .y(y + 19)
       .font({
         anchor: leftHalf ? "start" : "end",
       });
