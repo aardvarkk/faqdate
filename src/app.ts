@@ -25,12 +25,12 @@ function colorForIndex(sortedIdx: number) {
   return new Color(h, 80, 65, "hsl");
 }
 
-function fillAndStroke(circle: Circle, sortedIdx: number) {
-  const isMoment = sortedEntries()[sortedIdx].moment;
+function fillAndStroke(circle: Circle, entryIdx: number) {
+  const isMoment = entries[entryIdx].moment;
   if (isMoment) {
-    circle.fill(colorForIndex(sortedIdx));
+    circle.fill(colorForIndex(entryIdx));
   } else {
-    circle.fill("none").stroke({ color: colorForIndex(sortedIdx).toString() });
+    circle.fill("none").stroke({ color: colorForIndex(entryIdx).toString() });
   }
 }
 
@@ -61,29 +61,10 @@ function statusBadge(valid: boolean, idx: number) {
   return container;
 }
 
-function sortedEntries(): Entry[] {
-  return [...entries].sort((a, b) => {
-    if (!b.parsed?.isValid) {
-      return -1;
-    }
-    if (!a.parsed?.isValid) {
-      return 1;
-    }
-    return b.parsed.toMillis() - a.parsed.toMillis();
-  });
-}
-
 function updateStatus() {
   statuses.innerHTML = "";
-
-  const sorted = sortedEntries();
   entries.forEach((e, idx) => {
-    statuses.appendChild(
-      statusBadge(
-        e.parsed?.isValid === true,
-        sorted.findIndex((s) => s.line === idx)
-      )
-    );
+    statuses.appendChild(statusBadge(e.parsed?.isValid === true, idx));
   });
 }
 
@@ -135,7 +116,7 @@ function drawTimelines() {
     });
 
     timezoneTimes[idx] = [];
-    for (const e of sortedEntries()) {
+    for (const e of entries) {
       if (!e.parsed) {
         continue;
       }
