@@ -1,5 +1,5 @@
-# epoch.lol
+# faq.date
 
 A tool to experiment with times in various time zones.
 
-Available at [epoch.lol](https://www.epoch.lol)
+Available at [faq.date](https://faq.date)
