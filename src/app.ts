@@ -128,7 +128,7 @@ function updateTimelineTextarea() {
 
   const timelineLines: Array<string> = [];
   for (const [idx, entry] of sortedEntries.entries()) {
-    timelineLines.push(entry.raw);
+    timelineLines.push(entry.parsed?.comment ?? entry.raw);
 
     const nextEntry = sortedEntries[idx + 1];
     if (!nextEntry) {
