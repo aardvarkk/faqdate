@@ -6,6 +6,7 @@ export type ParsedDateTime = DateTime & {
 
 export type Entry = {
   line: number;
+  raw: string;
   text: string;
   parsed: ParsedDateTime | undefined;
   moment: boolean; // True if it's an "absolute" time, false if it depends on offset/timezone
@@ -93,6 +94,7 @@ export function toEntry(raw: string, line: number): Entry {
     if (whole.toString().length >= 13) {
       return {
         line,
+        raw,
         text,
         parsed: withComment(DateTime.fromMillis(number), comment),
         moment: true,
@@ -102,6 +104,7 @@ export function toEntry(raw: string, line: number): Entry {
     else {
       return {
         line,
+        raw,
         text,
         parsed: withComment(DateTime.fromSeconds(number), comment),
         moment: true,
@@ -120,6 +123,7 @@ export function toEntry(raw: string, line: number): Entry {
     if (fromISO.isValid) {
       return {
         line,
+        raw,
         text,
         parsed: withComment(fromISO, comment),
         moment: isMoment(DateTime.fromISO, text),
@@ -127,6 +131,7 @@ export function toEntry(raw: string, line: number): Entry {
     } else if (fromHTTP.isValid) {
       return {
         line,
+        raw,
         text,
         parsed: withComment(fromHTTP, comment),
         moment: isMoment(DateTime.fromHTTP, text),
@@ -134,6 +139,7 @@ export function toEntry(raw: string, line: number): Entry {
     } else if (fromRFC2822.isValid) {
       return {
         line,
+        raw,
         text,
         parsed: withComment(fromRFC2822, comment),
         moment: isMoment(DateTime.fromRFC2822, text),
@@ -141,6 +147,7 @@ export function toEntry(raw: string, line: number): Entry {
     } else if (fromSQL.isValid) {
       return {
         line,
+        raw,
         text,
         parsed: withComment(fromSQL, comment),
         moment: isMoment(DateTime.fromSQL, text),
@@ -148,6 +155,7 @@ export function toEntry(raw: string, line: number): Entry {
     } else if (fromCustom?.isValid) {
       return {
         line,
+        raw,
         text,
         parsed: withComment(fromCustom, comment),
         moment: false,
@@ -155,6 +163,7 @@ export function toEntry(raw: string, line: number): Entry {
     } else if (fromDate.toString() !== "Invalid Date") {
       return {
         line,
+        raw,
         text,
         parsed: withComment(DateTime.fromJSDate(fromDate), comment),
         moment: !hasClockTime(text) || hasExplicitTimezone(text),
@@ -162,6 +171,7 @@ export function toEntry(raw: string, line: number): Entry {
     } else {
       return {
         line,
+        raw,
         text,
         parsed: undefined,
         moment: false,

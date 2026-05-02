@@ -14,6 +14,9 @@ let maxMs = -Number.MAX_VALUE;
 const textarea = document.getElementById("textarea") as HTMLTextAreaElement;
 const statuses = document.getElementById("statuses") as HTMLDivElement;
 const rangeLabel = document.getElementById("range-label") as HTMLDivElement;
+const timelineTextarea = document.getElementById(
+  "timeline-textarea",
+) as HTMLTextAreaElement;
 const timelines = document.getElementById("timelines") as HTMLDivElement;
 const svg = SVG("svg").size("100%", "100%") as Svg;
 const l1 = svg.group(); // Timelines and circles
@@ -117,11 +120,20 @@ function updateRangeLabel() {
   rangeLabel.innerText = `Range: ${formatRange(maxParsed - minParsed)}`;
 }
 
+function updateTimelineTextarea() {
+  timelineTextarea.value = entries
+    .filter((entry) => entry.parsed)
+    .sort((a, b) => a.parsed!.toMillis() - b.parsed!.toMillis())
+    .map((entry) => entry.raw)
+    .join("\n");
+}
+
 function parseTextArea() {
   text = textarea.value;
   entries = text.split("\n").map(toEntry);
   updateStatus();
   updateRangeLabel();
+  updateTimelineTextarea();
 }
 
 textarea.addEventListener("input", (ev) => {

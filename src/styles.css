@@ -74,6 +74,11 @@ textarea {
   line-height: 1.5;
 }
 
+textarea[readonly] {
+  background-color: #f6f6f6;
+  color: #666;
+}
+
 #timelines {
   margin: 0 2em;
   flex-grow: 1;
