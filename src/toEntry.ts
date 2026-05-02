@@ -22,6 +22,16 @@ function isMoment(
   return a.toMillis() === b.toMillis();
 }
 
+function hasClockTime(text: string) {
+  return /\b\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?\b/i.test(text);
+}
+
+function hasExplicitTimezone(text: string) {
+  return /\b(?:UTC|GMT)(?:[+-]\d{1,2}(?::?\d{2})?)?\b|[+-]\d{2}:?\d{2}\b|\b(?!AM\b|PM\b)[A-Z]{2,4}\b/.test(
+    text
+  );
+}
+
 export function toEntry(raw: string, line: number): Entry {
   const text = raw.trim();
 
@@ -92,7 +102,7 @@ export function toEntry(raw: string, line: number): Entry {
         line,
         text,
         parsed: DateTime.fromJSDate(fromDate),
-        moment: true,
+        moment: !hasClockTime(text) || hasExplicitTimezone(text),
       };
     } else {
       return {
