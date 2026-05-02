@@ -151,7 +151,8 @@ function drawTimelines() {
           .stroke({ width: 4 })
           .attr("pointer-events", "all")
           .attr("cursor", "pointer")
-          .on("click", () => {
+          .on("click", (ev: Event) => {
+            ev.stopPropagation();
             showModal({
               tz: timezones[idx],
               entry: entries[entryIdx],
@@ -312,13 +313,8 @@ timelines.onmouseover = (ev) => {
   offsetY = ev.offsetY;
 };
 
-function updateCrosshair() {
-  if (!offsetX) {
-    return;
-  }
-
+function snappedTimeAt(offsetX: number) {
   const w = timelines.clientWidth;
-  const h = timelines.clientHeight / timezones.length;
 
   // Get all ms values for entries
   const allMs: Set<number> = new Set();
@@ -334,23 +330,38 @@ function updateCrosshair() {
   // Get a snapped ms based on physical proximity in px to known ms value
   // Default to a value based on pixel offset
   let snappedMs = (offsetX / w) * (maxMs - minMs) + minMs;
+  let snappedX = offsetX;
   for (const ms of allMs) {
     const msX = maxMs > minMs ? ((ms - minMs) / (maxMs - minMs)) * w : w / 2;
     if (Math.abs(offsetX - msX) <= 12) {
       snappedMs = ms;
-      offsetX = msX;
+      snappedX = msX;
     }
   }
 
+  return {
+    snappedMs,
+    snappedX,
+  };
+}
+
+function updateCrosshair() {
+  if (!offsetX) {
+    return;
+  }
+
+  const h = timelines.clientHeight / timezones.length;
+  const { snappedMs, snappedX } = snappedTimeAt(offsetX);
+
   l2.clear();
 
-  l2.line(offsetX, 0, offsetX, timelines.clientHeight).stroke({
+  l2.line(snappedX, 0, snappedX, timelines.clientHeight).stroke({
     color: "#666",
   });
 
   const t = DateTime.fromMillis(snappedMs);
 
-  const leftHalf = offsetX <= timelines.clientWidth / 2;
+  const leftHalf = snappedX <= timelines.clientWidth / 2;
   // SVG text anchoring is not visually symmetric, so the right-aligned
   // labels need a slightly larger offset to match the left-side gap.
   const labelPadding = leftHalf ? 2 : 4;
@@ -359,7 +370,7 @@ function updateCrosshair() {
 
     // Absolute time
     l2.text(t.setZone(tz).toISO({ suppressMilliseconds: true }))
-      .x(offsetX + (leftHalf ? 1 : -1) * labelPadding)
+      .x(snappedX + (leftHalf ? 1 : -1) * labelPadding)
       .y(y + 19)
       .font({
         anchor: leftHalf ? "start" : "end",
@@ -367,7 +378,7 @@ function updateCrosshair() {
 
     // Relative time
     l2.text(t.setZone(tz).toRelative() ?? "")
-      .x(offsetX + (leftHalf ? 1 : -1) * labelPadding)
+      .x(snappedX + (leftHalf ? 1 : -1) * labelPadding)
       .y(y + 38)
       .font({
         anchor: leftHalf ? "start" : "end",
@@ -384,6 +395,24 @@ timelines.onmousemove = (ev) => {
 timelines.onmouseout = () => {
   offsetX = offsetY = undefined;
   l2.clear();
+};
+
+timelines.onclick = (ev) => {
+  if (timezones.length === 0) {
+    return;
+  }
+
+  const rowHeight = timelines.clientHeight / timezones.length;
+  const tzIdx = Math.min(
+    timezones.length - 1,
+    Math.max(0, Math.floor(ev.offsetY / rowHeight))
+  );
+  const { snappedMs } = snappedTimeAt(ev.offsetX);
+
+  showModal({
+    tz: timezones[tzIdx],
+    time: DateTime.fromMillis(snappedMs),
+  });
 };
 
 // Modal stuff
@@ -423,14 +452,22 @@ function showModal(
     | {
         tz: string;
         entry: Entry;
+        time?: undefined;
+      }
+    | {
+        tz: string;
+        time: DateTime;
+        entry?: undefined;
       }
     | undefined
 ) {
   if (displayInfo) {
     const e = displayInfo.entry;
+    const parsed = e?.parsed ?? displayInfo.time;
+    const moment = e?.moment ?? false;
 
     const left = document.createElement("div");
-    const badge = statusBadge(true, e.line);
+    const badge = e ? statusBadge(true, e.line) : statusBadge(true, 0);
     left.appendChild(badge);
 
     const right = document.createElement("div");
@@ -438,7 +475,9 @@ function showModal(
 
     const title = document.createElement("div");
     title.className = "modal-title";
-    title.innerText = e.text;
+    title.innerText =
+      e?.text ??
+      parsed!.setZone(displayInfo.tz).toISO({ suppressMilliseconds: true })!;
     right.appendChild(title);
 
     const tz = document.createElement("div");
@@ -446,7 +485,7 @@ function showModal(
     right.appendChild(tz);
 
     const subtitle = document.createElement("div");
-    subtitle.innerText = e.parsed?.toRelative() ?? "";
+    subtitle.innerText = parsed?.toRelative() ?? "";
     right.appendChild(subtitle);
 
     // Output formats
@@ -459,8 +498,8 @@ function showModal(
       row.appendChild(name);
 
       const value = document.createElement("td");
-      const inTz = e.parsed!.setZone(displayInfo.tz, {
-        keepLocalTime: !e.moment,
+      const inTz = parsed!.setZone(displayInfo.tz, {
+        keepLocalTime: !moment,
       });
       const text =
         format === "toISO"
