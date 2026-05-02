@@ -8,6 +8,7 @@ const KEY_TIMEZONES = "timezones";
 let text: string = "";
 let entries: Array<Entry> = [];
 let timezones: Array<string> = [];
+let timelineTimezone = "UTC";
 let minMs = Number.MAX_VALUE;
 let maxMs = -Number.MAX_VALUE;
 
@@ -23,6 +24,9 @@ const timelineStatuses = document.getElementById(
 const timelineTextarea = document.getElementById(
   "timeline-textarea",
 ) as HTMLTextAreaElement;
+const timelineTimezoneSelect = document.querySelector(
+  "#timeline-timezone select",
+) as HTMLSelectElement;
 const timelines = document.getElementById("timelines") as HTMLDivElement;
 const svg = SVG("svg").size("100%", "100%") as Svg;
 const l1 = svg.group(); // Timelines and circles
@@ -167,9 +171,14 @@ function updateRangeLabel() {
 }
 
 function updateTimelineTextarea() {
+  const projectedMillis = (entry: Entry) =>
+    entry.parsed!
+      .setZone(timelineTimezone, { keepLocalTime: !entry.moment })
+      .toMillis();
+
   const sortedEntries = entries
     .filter((entry) => entry.parsed)
-    .sort((a, b) => a.parsed!.toMillis() - b.parsed!.toMillis())
+    .sort((a, b) => projectedMillis(a) - projectedMillis(b))
     .map((entry) => entry);
 
   const timelineLines: Array<string> = [];
@@ -183,7 +192,7 @@ function updateTimelineTextarea() {
       continue;
     }
 
-    const gapMs = nextEntry.parsed!.toMillis() - entry.parsed!.toMillis();
+    const gapMs = projectedMillis(nextEntry) - projectedMillis(entry);
     timelineLines.push(`  ... ${formatRange(gapMs)} ...`);
     timelineStatuses.appendChild(statusSpacer());
   }
@@ -369,6 +378,13 @@ function refresh() {
   drawTimelines();
 }
 
+function setDefaultTimelineTimezone() {
+  const localTimezone = DateTime.now().zoneName;
+  timelineTimezone = timezones.includes(localTimezone) ? localTimezone : "UTC";
+  timelineTimezoneSelect.value = timelineTimezone;
+  updateTimelineTextarea();
+}
+
 addEventListener("paste", (ev) => {
   // Allow "normal" paste behaviour to occur if you pasted inside textarea
   // `input` event will handle it
@@ -425,8 +441,14 @@ for (const tz of Intl.supportedValuesOf("timeZone")) {
   option.text = tz;
   option.value = tz;
   select.appendChild(option);
+
+  const timelineOption = document.createElement("option");
+  timelineOption.text = tz;
+  timelineOption.value = tz;
+  timelineTimezoneSelect.appendChild(timelineOption);
 }
 select.value = DateTime.now().zoneName;
+timelineTimezoneSelect.value = timelineTimezone;
 
 function addTimezone(tz: string) {
   removeTimezone(tz); // Clear if it's already there
@@ -445,6 +467,11 @@ document.getElementById("add-button")!.onclick = () => {
   addTimezone(select.value);
 };
 
+timelineTimezoneSelect.onchange = () => {
+  timelineTimezone = timelineTimezoneSelect.value;
+  updateTimelineTextarea();
+};
+
 document.getElementById("add-format-button")!.onclick = () => {
   let text = textarea.value;
   if (text && !text.endsWith("\n")) {
@@ -458,12 +485,14 @@ document.getElementById("add-format-button")!.onclick = () => {
 // Load previous timezones
 if (localStorage.getItem(KEY_TIMEZONES)) {
   timezones = localStorage.getItem(KEY_TIMEZONES)!.split(",");
+  setDefaultTimelineTimezone();
   refresh();
 }
 // No previous timezones -- make new ones
 else {
   addTimezone("UTC");
   addTimezone(DateTime.local().zoneName);
+  setDefaultTimelineTimezone();
 }
 
 let offsetX: number | undefined = undefined;

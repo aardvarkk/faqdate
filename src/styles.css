@@ -38,7 +38,7 @@ body {
 .side-panel {
   display: flex;
   flex: 1;
-  padding: 0 0.2em 2em 0;
+  padding: 0 0.2em 0.5em 0;
   align-items: stretch;
 }
 
@@ -91,7 +91,7 @@ textarea[readonly] {
 #add-timezone,
 #add-format {
   text-align: center;
-  margin-bottom: 2em;
+  margin-bottom: 1em;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -104,6 +104,21 @@ textarea[readonly] {
   border: 1px solid darkgray;
   border-radius: 8px;
   height: 100%;
+}
+
+#timeline-timezone {
+  text-align: center;
+  margin-bottom: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#timeline-timezone select {
+  padding: 0.5em;
+  background-color: white;
+  border: 1px solid darkgray;
+  border-radius: 8px;
 }
 
 #add-format {
