@@ -121,11 +121,25 @@ function updateRangeLabel() {
 }
 
 function updateTimelineTextarea() {
-  timelineTextarea.value = entries
+  const sortedEntries = entries
     .filter((entry) => entry.parsed)
     .sort((a, b) => a.parsed!.toMillis() - b.parsed!.toMillis())
-    .map((entry) => entry.raw)
-    .join("\n");
+    .map((entry) => entry);
+
+  const timelineLines: Array<string> = [];
+  for (const [idx, entry] of sortedEntries.entries()) {
+    timelineLines.push(entry.raw);
+
+    const nextEntry = sortedEntries[idx + 1];
+    if (!nextEntry) {
+      continue;
+    }
+
+    const gapMs = nextEntry.parsed!.toMillis() - entry.parsed!.toMillis();
+    timelineLines.push(`  ... ${formatRange(gapMs)} ...`);
+  }
+
+  timelineTextarea.value = timelineLines.join("\n");
 }
 
 function parseTextArea() {
