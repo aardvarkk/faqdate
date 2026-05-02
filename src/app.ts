@@ -63,7 +63,7 @@ function statusBadge(valid: boolean, idx: number) {
         .attr("cy", "50%")
         .stroke({ width: 6 })
         .clipWith(clip),
-      idx
+      idx,
     );
   } else {
     const span = document.createElement("span");
@@ -113,19 +113,35 @@ function drawTimelines() {
 
     // Put the timeline lines into a group for organizational purposes
     const tl = l1.group();
+    const insetX = 2;
+    const insetY = 4;
+
+    tl.rect(w - insetX * 2, h - insetY * 2)
+      .move(insetX, idx * h + insetY)
+      .fill("none")
+      .stroke({ color: "#d3d3d3", width: 2 });
 
     // Main horizontal
-    tl.line(0, y, w, y).stroke({ color: "#eee", width: 2 });
-
-    // Arrows
-    const arrowLen = 6;
-    tl.line(0, y, arrowLen, y - arrowLen).stroke({ color: "#eee", width: 2 });
-    tl.line(0, y, arrowLen, y + arrowLen).stroke({ color: "#eee", width: 2 });
-    tl.line(w, y, w - arrowLen, y - arrowLen).stroke({
+    tl.line(insetX * 4, y, w - insetX * 4, y).stroke({
       color: "#eee",
       width: 2,
     });
-    tl.line(w, y, w - arrowLen, y + arrowLen).stroke({
+
+    // Arrows
+    const arrowLen = 8;
+    tl.line(insetX * 4, y, insetX * 4 + arrowLen, y - arrowLen).stroke({
+      color: "#eee",
+      width: 2,
+    });
+    tl.line(insetX * 4, y, insetX * 4 + arrowLen, y + arrowLen).stroke({
+      color: "#eee",
+      width: 2,
+    });
+    tl.line(w - insetX * 4, y, w - insetX * 4 - arrowLen, y - arrowLen).stroke({
+      color: "#eee",
+      width: 2,
+    });
+    tl.line(w - insetX * 4, y, w - insetX * 4 - arrowLen, y + arrowLen).stroke({
       color: "#eee",
       width: 2,
     });
@@ -161,7 +177,7 @@ function drawTimelines() {
             maxMs - minMs > 0
               ? (w * (t.toMillis() - minMs)) / (maxMs - minMs)
               : w / 2,
-            y
+            y,
           )
           .stroke({ width: 4 })
           .attr("pointer-events", "all")
@@ -173,14 +189,14 @@ function drawTimelines() {
               entry: entries[entryIdx],
             });
           }),
-        entryIdx
+        entryIdx,
       );
     }
   }
 
   // Write timezone labels and center times
   for (const [idx, tz] of timezones.entries()) {
-    const y = (idx + 1) * h - 18;
+    const y = (idx + 1) * h - 24;
     // const timeStr = DateTime.fromMillis(minMs + range / 2, {
     //   zone: tz,
     // }).toISO();
@@ -202,8 +218,10 @@ function drawTimelines() {
     .forEach((e) => e.parentNode!.removeChild(e));
 
   // Create buttons to remove timezones
+  const buttonInsetX = 6;
+  const buttonInsetY = 8;
   for (const [idx, tz] of timezones.entries()) {
-    const y = idx * h;
+    const y = idx * h + buttonInsetY;
 
     const button = document.createElement("button");
     button.onmousemove = (ev) => {
@@ -213,7 +231,7 @@ function drawTimelines() {
     button.className = "remove-button";
     button.style.position = "absolute";
     button.style.top = `${y}px`;
-    button.style.right = "0";
+    button.style.right = `${buttonInsetX}px`;
     button.onclick = () => {
       removeTimezone(tz);
     };
@@ -282,7 +300,7 @@ declare namespace Intl {
   function supportedValuesOf(input: Key): string[];
 }
 const select = document.querySelector(
-  "#add-timezone select"
+  "#add-timezone select",
 )! as HTMLSelectElement;
 for (const tz of Intl.supportedValuesOf("timeZone")) {
   const option = document.createElement("option");
@@ -372,12 +390,19 @@ function updateCrosshair() {
   const { isSnapped, snappedMs, snappedX } = snappedTimeAt(offsetX);
   const hoveredTzIdx = Math.min(
     timezones.length - 1,
-    Math.max(0, Math.floor(offsetY / h))
+    Math.max(0, Math.floor(offsetY / h)),
   );
 
   l2.clear();
 
-  l2.line(snappedX, 0, snappedX, timelines.clientHeight).stroke({
+  const crosshairInset = 4;
+
+  l2.line(
+    snappedX,
+    crosshairInset,
+    snappedX,
+    timelines.clientHeight - crosshairInset,
+  ).stroke({
     color: "#666",
   });
   l2.circle(10)
@@ -454,7 +479,7 @@ timelines.onclick = (ev) => {
   const rowHeight = timelines.clientHeight / timezones.length;
   const tzIdx = Math.min(
     timezones.length - 1,
-    Math.max(0, Math.floor(ev.offsetY / rowHeight))
+    Math.max(0, Math.floor(ev.offsetY / rowHeight)),
   );
   const { snappedMs } = snappedTimeAt(ev.offsetX);
 
@@ -508,7 +533,7 @@ function showModal(
         time: DateTime;
         entry?: undefined;
       }
-    | undefined
+    | undefined,
 ) {
   if (displayInfo) {
     const e = displayInfo.entry;
