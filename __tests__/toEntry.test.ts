@@ -62,6 +62,28 @@ describe("toEntry", () => {
     expect(entry.moment).toBe(false);
   });
 
+  // 2026-05-01 3PM
+  it("treats date strings with a meridiem time and no timezone as local wall time", () => {
+    const entry = toEntry("2026-05-01 3PM", 1);
+
+    expect(entry.parsed?.isValid).toBe(true);
+    expect(entry.parsed?.toFormat("yyyy-MM-dd HH:mm:ss")).toBe(
+      "2026-05-01 15:00:00"
+    );
+    expect(entry.moment).toBe(false);
+  });
+
+  // 3PM 2026-05-01
+  it("treats swapped date and meridiem time strings as local wall time", () => {
+    const entry = toEntry("3PM 2026-05-01", 1);
+
+    expect(entry.parsed?.isValid).toBe(true);
+    expect(entry.parsed?.toFormat("yyyy-MM-dd HH:mm:ss")).toBe(
+      "2026-05-01 15:00:00"
+    );
+    expect(entry.moment).toBe(false);
+  });
+
   it("does not treat dates with a time but no timezone as absolute moments", () => {
     const entry = toEntry("Feb 14 2025 2:17 PM", 1);
 

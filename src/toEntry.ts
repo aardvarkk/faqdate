@@ -34,6 +34,24 @@ function hasExplicitTimezone(text: string) {
   );
 }
 
+function fromCustomFormat(text: string) {
+  const formats = [
+    "yyyy-MM-dd ha",
+    "yyyy-MM-dd h a",
+    "ha yyyy-MM-dd",
+    "h a yyyy-MM-dd",
+  ];
+
+  for (const format of formats) {
+    const parsed = DateTime.fromFormat(text, format);
+    if (parsed.isValid) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+}
+
 export function toEntry(raw: string, line: number): Entry {
   const text = raw.trim();
 
@@ -69,6 +87,7 @@ export function toEntry(raw: string, line: number): Entry {
     const fromISO = DateTime.fromISO(text);
     const fromRFC2822 = DateTime.fromRFC2822(text);
     const fromSQL = DateTime.fromSQL(text);
+    const fromCustom = fromCustomFormat(text);
     const fromDate = new Date(text);
 
     if (fromISO.isValid) {
@@ -98,6 +117,13 @@ export function toEntry(raw: string, line: number): Entry {
         text,
         parsed: fromSQL,
         moment: isMoment(DateTime.fromSQL, text),
+      };
+    } else if (fromCustom?.isValid) {
+      return {
+        line,
+        text,
+        parsed: fromCustom,
+        moment: false,
       };
     } else if (fromDate.toString() !== "Invalid Date") {
       return {
