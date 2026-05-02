@@ -128,4 +128,11 @@ describe("toEntry", () => {
     expect(entry.parsed?.isValid).toBe(true);
     expect(entry.moment).toBe(false);
   });
+
+  it("does not treat RFC2822-like date-only strings as absolute moments", () => {
+    const entry = toEntry("Sat, 02 May 2026", 1);
+
+    expect(entry.parsed?.isValid).toBe(true);
+    expect(entry.moment).toBe(false);
+  });
 });

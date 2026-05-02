@@ -27,11 +27,6 @@ function isMoment(
   return a.toMillis() === b.toMillis();
 }
 
-// Matches clock times like "2:17 PM", "09:17", or "19:51:50".
-function hasClockTime(text: string) {
-  return /\b\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?\b/i.test(text);
-}
-
 // Matches explicit timezone markers like "UTC", "GMT-0700", "-08:00", or "PDT".
 function hasExplicitTimezone(text: string) {
   return /\b(?:UTC|GMT)(?:[+-]\d{1,2}(?::?\d{2})?)?\b|[+-]\d{2}:?\d{2}\b|\b(?!AM\b|PM\b)[A-Z]{2,4}\b/.test(
@@ -166,7 +161,7 @@ export function toEntry(raw: string, line: number): Entry {
         raw,
         text,
         parsed: withComment(DateTime.fromJSDate(fromDate), comment),
-        moment: !hasClockTime(text) || hasExplicitTimezone(text),
+        moment: hasExplicitTimezone(text),
       };
     } else {
       return {
