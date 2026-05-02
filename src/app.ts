@@ -172,8 +172,8 @@ function updateRangeLabel() {
 
 function updateTimelineTextarea() {
   const projectedMillis = (entry: Entry) =>
-    entry.parsed!
-      .setZone(timelineTimezone, { keepLocalTime: !entry.moment })
+    entry
+      .parsed!.setZone(timelineTimezone, { keepLocalTime: !entry.moment })
       .toMillis();
 
   const sortedEntries = entries
@@ -574,12 +574,13 @@ function updateCrosshair() {
   // labels need a slightly larger offset to match the left-side gap.
   const labelPadding = leftHalf ? 2 : 4;
   for (const [idx, tz] of timezones.entries()) {
-    const y = idx * h + h / 2;
+    const rowTop = idx * h;
+    const labelY = rowTop + 12;
 
     // Absolute time
     l2.text(t.setZone(tz).toISO({ suppressMilliseconds: true }))
       .x(snappedX + (leftHalf ? 1 : -1) * labelPadding)
-      .y(y + 19)
+      .y(labelY)
       .font({
         anchor: leftHalf ? "start" : "end",
       });
@@ -587,7 +588,7 @@ function updateCrosshair() {
     // Relative time
     l2.text(t.setZone(tz).toRelative() ?? "")
       .x(snappedX + (leftHalf ? 1 : -1) * labelPadding)
-      .y(y + 38)
+      .y(labelY + 19)
       .font({
         anchor: leftHalf ? "start" : "end",
       });
@@ -608,7 +609,7 @@ function updateCrosshair() {
     if (snappedEntry?.parsed?.comment) {
       l2.text(snappedEntry.parsed.comment)
         .x(snappedX + (leftHalf ? 1 : -1) * labelPadding)
-        .y(y + 57)
+        .y(labelY + 38)
         .font({
           anchor: leftHalf ? "start" : "end",
           weight: "bold",
