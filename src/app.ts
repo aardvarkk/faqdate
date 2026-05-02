@@ -351,12 +351,15 @@ function updateCrosshair() {
   const t = DateTime.fromMillis(snappedMs);
 
   const leftHalf = offsetX <= timelines.clientWidth / 2;
+  // SVG text anchoring is not visually symmetric, so the right-aligned
+  // labels need a slightly larger offset to match the left-side gap.
+  const labelPadding = leftHalf ? 2 : 4;
   for (const [idx, tz] of timezones.entries()) {
     const y = idx * h + h / 2;
 
     // Absolute time
     l2.text(t.setZone(tz).toISO({ suppressMilliseconds: true }))
-      .x(offsetX + (leftHalf ? 1 : -1) * 2)
+      .x(offsetX + (leftHalf ? 1 : -1) * labelPadding)
       .y(y + 19)
       .font({
         anchor: leftHalf ? "start" : "end",
@@ -364,7 +367,7 @@ function updateCrosshair() {
 
     // Relative time
     l2.text(t.setZone(tz).toRelative() ?? "")
-      .x(offsetX + (leftHalf ? 1 : -1) * 2)
+      .x(offsetX + (leftHalf ? 1 : -1) * labelPadding)
       .y(y + 38)
       .font({
         anchor: leftHalf ? "start" : "end",
