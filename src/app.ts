@@ -20,17 +20,31 @@ const l2 = svg.group(); // Verticle line and timestamps
 const l3 = svg.group(); // Timezone background mask
 const l4 = svg.group(); // Timezone background mask
 
-function colorForIndex(sortedIdx: number) {
-  const h = (sortedIdx * 360) / entries.length;
+function validEntryIndexes() {
+  return entries.flatMap((entry, idx) => (entry.parsed ? [idx] : []));
+}
+
+function colorSlotForEntry(entryIdx: number) {
+  return validEntryIndexes().indexOf(entryIdx);
+}
+
+function colorForSlot(colorSlot: number) {
+  const validCount = validEntryIndexes().length || 1;
+  const h = (colorSlot * 360) / validCount;
   return new Color(h, 80, 65, "hsl");
 }
 
 function fillAndStroke(circle: Circle, entryIdx: number) {
+  const colorSlot = colorSlotForEntry(entryIdx);
+  if (colorSlot < 0) {
+    return;
+  }
+
   const isMoment = entries[entryIdx].moment;
   if (isMoment) {
-    circle.fill(colorForIndex(entryIdx));
+    circle.fill(colorForSlot(colorSlot));
   } else {
-    circle.fill("none").stroke({ color: colorForIndex(entryIdx).toString() });
+    circle.fill("none").stroke({ color: colorForSlot(colorSlot).toString() });
   }
 }
 
@@ -90,7 +104,8 @@ function drawTimelines() {
   minMs = Number.MAX_VALUE;
   maxMs = -Number.MAX_VALUE;
 
-  const timezoneTimes: Array<Array<DateTime>> = new Array(timezones.length);
+  const timezoneTimes: Array<Array<{ entryIdx: number; time: DateTime }>> =
+    new Array(timezones.length);
 
   // Collect stats and create times adjusted to each timezone
   for (const [idx, tz] of timezones.entries()) {
@@ -116,13 +131,13 @@ function drawTimelines() {
     });
 
     timezoneTimes[idx] = [];
-    for (const e of entries) {
+    for (const [entryIdx, e] of entries.entries()) {
       if (!e.parsed) {
         continue;
       }
 
       const inTz = e.parsed.setZone(tz, { keepLocalTime: !e.moment });
-      timezoneTimes[idx].push(inTz);
+      timezoneTimes[idx].push({ entryIdx, time: inTz });
 
       minMs = Math.min(minMs, inTz.toMillis());
       maxMs = Math.max(maxMs, inTz.toMillis());
@@ -136,7 +151,7 @@ function drawTimelines() {
 
   // Draw actual circles
   for (const [idx, tzTimes] of timezoneTimes.entries()) {
-    for (const [entryIdx, t] of tzTimes.entries()) {
+    for (const { entryIdx, time: t } of tzTimes) {
       const y = idx * h + h / 2;
 
       fillAndStroke(
