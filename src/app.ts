@@ -14,6 +14,9 @@ let maxMs = -Number.MAX_VALUE;
 const textarea = document.getElementById("textarea") as HTMLTextAreaElement;
 const statuses = document.getElementById("statuses") as HTMLDivElement;
 const rangeLabel = document.getElementById("range-label") as HTMLDivElement;
+const formatSelect = document.querySelector(
+  "#add-format select",
+) as HTMLSelectElement;
 const timelineStatuses = document.getElementById(
   "timeline-statuses",
 ) as HTMLDivElement;
@@ -26,6 +29,40 @@ const l1 = svg.group(); // Timelines and circles
 const l2 = svg.group(); // Verticle line and timestamps
 const l3 = svg.group(); // Timezone background mask
 const l4 = svg.group(); // Timezone background mask
+
+enum FormatMethods {
+  SECS = "toUnixInteger",
+  MILLIS = "toMillis",
+  ISO = "toISO",
+  HTTP = "toHTTP",
+  SQL = "toSQL",
+  RFC2822 = "toRFC2822",
+}
+
+function formatName(method: FormatMethods) {
+  switch (method) {
+    case FormatMethods.HTTP:
+      return "HTTP";
+    case FormatMethods.ISO:
+      return "ISO 8601";
+    case FormatMethods.MILLIS:
+      return "Unix (ms)";
+    case FormatMethods.SECS:
+      return "Unix (s)";
+    case FormatMethods.RFC2822:
+      return "RFC 2822";
+    case FormatMethods.SQL:
+      return "SQL";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+function serializeFormat(dt: DateTime, format: FormatMethods) {
+  return format === FormatMethods.ISO
+    ? dt[format]({ suppressMilliseconds: true }).toString()
+    : dt[format]().toString();
+}
 
 function validEntryIndexes() {
   return entries.flatMap((entry, idx) => (entry.parsed ? [idx] : []));
@@ -376,6 +413,13 @@ declare namespace Intl {
 const select = document.querySelector(
   "#add-timezone select",
 )! as HTMLSelectElement;
+for (const format of Object.values(FormatMethods)) {
+  const option = document.createElement("option");
+  option.text = formatName(format);
+  option.value = format;
+  formatSelect.appendChild(option);
+}
+formatSelect.value = FormatMethods.ISO;
 for (const tz of Intl.supportedValuesOf("timeZone")) {
   const option = document.createElement("option");
   option.text = tz;
@@ -399,6 +443,16 @@ function removeTimezone(tz: string) {
 
 document.getElementById("add-button")!.onclick = () => {
   addTimezone(select.value);
+};
+
+document.getElementById("add-format-button")!.onclick = () => {
+  let text = textarea.value;
+  if (text && !text.endsWith("\n")) {
+    text += "\n";
+  }
+  text += serializeFormat(DateTime.now(), formatSelect.value as FormatMethods);
+  textarea.value = text;
+  refresh();
 };
 
 // Load previous timezones
@@ -567,34 +621,6 @@ timelines.onclick = (ev) => {
 const backdrop = document.querySelector(".modal-backdrop")! as HTMLDivElement;
 const modal = document.querySelector(".modal")! as HTMLDivElement;
 
-enum FormatMethods {
-  SECS = "toUnixInteger",
-  MILLIS = "toMillis",
-  ISO = "toISO",
-  HTTP = "toHTTP",
-  SQL = "toSQL",
-  RFC2822 = "toRFC2822",
-}
-
-function formatName(method: FormatMethods) {
-  switch (method) {
-    case FormatMethods.HTTP:
-      return "HTTP";
-    case FormatMethods.ISO:
-      return "ISO 8601";
-    case FormatMethods.MILLIS:
-      return "Unix (ms)";
-    case FormatMethods.SECS:
-      return "Unix (s)";
-    case FormatMethods.RFC2822:
-      return "RFC 2822";
-    case FormatMethods.SQL:
-      return "SQL";
-    default:
-      return "UNKNOWN";
-  }
-}
-
 function showModal(
   displayInfo:
     | {
@@ -649,10 +675,7 @@ function showModal(
       const inTz = parsed!.setZone(displayInfo.tz, {
         keepLocalTime: !moment,
       });
-      const text =
-        format === "toISO"
-          ? inTz[format]({ suppressMilliseconds: true }).toString()
-          : inTz[format]().toString();
+      const text = serializeFormat(inTz, format);
       value.innerText = text;
       row.appendChild(value);
 
