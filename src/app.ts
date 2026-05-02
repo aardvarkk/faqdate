@@ -13,6 +13,7 @@ let maxMs = -Number.MAX_VALUE;
 
 const textarea = document.getElementById("textarea") as HTMLTextAreaElement;
 const statuses = document.getElementById("statuses") as HTMLDivElement;
+const rangeLabel = document.getElementById("range-label") as HTMLDivElement;
 const timelines = document.getElementById("timelines") as HTMLDivElement;
 const svg = SVG("svg").size("100%", "100%") as Svg;
 const l1 = svg.group(); // Timelines and circles
@@ -22,6 +23,25 @@ const l4 = svg.group(); // Timezone background mask
 
 function validEntryIndexes() {
   return entries.flatMap((entry, idx) => (entry.parsed ? [idx] : []));
+}
+
+function formatRange(ms: number) {
+  const units = [
+    { label: "day", ms: 24 * 60 * 60 * 1000 },
+    { label: "hour", ms: 60 * 60 * 1000 },
+    { label: "minute", ms: 60 * 1000 },
+    { label: "second", ms: 1000 },
+    { label: "millisecond", ms: 1 },
+  ];
+
+  for (const unit of units) {
+    if (ms >= unit.ms || unit.ms === 1) {
+      const value = Math.floor(ms / unit.ms);
+      return `${value} ${unit.label}${value === 1 ? "" : "s"}`;
+    }
+  }
+
+  return "0 milliseconds";
 }
 
 function colorSlotForEntry(entryIdx: number) {
@@ -82,10 +102,26 @@ function updateStatus() {
   });
 }
 
+function updateRangeLabel() {
+  const parsedEntries = entries.flatMap((entry) =>
+    entry.parsed ? [entry.parsed.toMillis()] : [],
+  );
+
+  if (parsedEntries.length <= 1) {
+    rangeLabel.innerText = "Range";
+    return;
+  }
+
+  const minParsed = Math.min(...parsedEntries);
+  const maxParsed = Math.max(...parsedEntries);
+  rangeLabel.innerText = `Range: ${formatRange(maxParsed - minParsed)}`;
+}
+
 function parseTextArea() {
   text = textarea.value;
   entries = text.split("\n").map(toEntry);
   updateStatus();
+  updateRangeLabel();
 }
 
 textarea.addEventListener("input", (ev) => {
@@ -114,10 +150,10 @@ function drawTimelines() {
     // Put the timeline lines into a group for organizational purposes
     const tl = l1.group();
     const insetX = 2;
-    const insetY = 4;
+    const insetY = 8;
 
-    tl.rect(w - insetX * 2, h - insetY * 2)
-      .move(insetX, idx * h + insetY)
+    tl.rect(w - insetX * 2, h - insetY)
+      .move(insetX, idx * h + 1)
       .fill("white")
       .stroke({ color: "#d3d3d3", width: 2 });
 
@@ -196,7 +232,7 @@ function drawTimelines() {
 
   // Write timezone labels and center times
   for (const [idx, tz] of timezones.entries()) {
-    const y = (idx + 1) * h - 24;
+    const y = (idx + 1) * h - 28;
     // const timeStr = DateTime.fromMillis(minMs + range / 2, {
     //   zone: tz,
     // }).toISO();
@@ -219,7 +255,7 @@ function drawTimelines() {
 
   // Create buttons to remove timezones
   const buttonInsetX = 6;
-  const buttonInsetY = 8;
+  const buttonInsetY = 5;
   for (const [idx, tz] of timezones.entries()) {
     const y = idx * h + buttonInsetY;
 
