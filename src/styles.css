@@ -20,15 +20,25 @@ body {
   flex-direction: column;
 }
 
+.side-column {
+  display: flex;
+  flex-direction: column;
+}
+
 .panel-label {
   font-weight: bold;
-  margin: 2em 0 0.6em 2.8em;
 }
 
 #leftbar {
   display: flex;
   flex: 1;
   padding: 0em 0 2em 0em;
+}
+
+.side-panel {
+  display: flex;
+  flex: 1;
+  padding: 0 2em 2em 0;
 }
 
 /* Borders must match to have proper alignment */

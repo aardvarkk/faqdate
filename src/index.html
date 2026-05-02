@@ -23,20 +23,28 @@
       </div>
       <div style="display: flex; flex: 1">
         <div id="left-column">
-          <div class="panel-label">Input</div>
+          <div class="panel-label" style="margin: 2em 0 0.6em 2.8em">Input</div>
           <div id="leftbar">
             <div id="statuses"></div>
             <textarea id="textarea"></textarea>
           </div>
         </div>
         <div style="display: flex; flex-direction: column; flex: 1">
-          <div id="range-label" class="panel-label">Range</div>
+          <div id="range-label" class="panel-label" style="margin: 2em 0 0.6em 2em">
+            Range
+          </div>
           <div id="timelines">
             <svg></svg>
           </div>
           <div id="add-timezone">
             <select></select>
             <button id="add-button"><span>+</span></button>
+          </div>
+        </div>
+        <div class="side-column">
+          <div class="panel-label" style="margin: 2em 0 0.6em 0">Timeline</div>
+          <div class="side-panel">
+            <textarea id="timeline-textarea"></textarea>
           </div>
         </div>
       </div>

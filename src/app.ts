@@ -254,7 +254,7 @@ function drawTimelines() {
     .forEach((e) => e.parentNode!.removeChild(e));
 
   // Create buttons to remove timezones
-  const buttonInsetX = 6;
+  const buttonInsetX = 7;
   const buttonInsetY = 5;
   for (const [idx, tz] of timezones.entries()) {
     const y = idx * h + buttonInsetY;
