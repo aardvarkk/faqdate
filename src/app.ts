@@ -331,15 +331,18 @@ function snappedTimeAt(offsetX: number) {
   // Default to a value based on pixel offset
   let snappedMs = (offsetX / w) * (maxMs - minMs) + minMs;
   let snappedX = offsetX;
+  let isSnapped = false;
   for (const ms of allMs) {
     const msX = maxMs > minMs ? ((ms - minMs) / (maxMs - minMs)) * w : w / 2;
     if (Math.abs(offsetX - msX) <= 12) {
       snappedMs = ms;
       snappedX = msX;
+      isSnapped = true;
     }
   }
 
   return {
+    isSnapped,
     snappedMs,
     snappedX,
   };
@@ -351,7 +354,7 @@ function updateCrosshair() {
   }
 
   const h = timelines.clientHeight / timezones.length;
-  const { snappedMs, snappedX } = snappedTimeAt(offsetX);
+  const { isSnapped, snappedMs, snappedX } = snappedTimeAt(offsetX);
   const hoveredTzIdx = Math.min(
     timezones.length - 1,
     Math.max(0, Math.floor(offsetY / h))
@@ -391,6 +394,29 @@ function updateCrosshair() {
       .font({
         anchor: leftHalf ? "start" : "end",
       });
+
+    if (!isSnapped || idx !== hoveredTzIdx) {
+      continue;
+    }
+
+    const snappedEntry = entries.find((e) => {
+      if (!e.parsed?.comment) {
+        return false;
+      }
+
+      const inTz = e.parsed.setZone(tz, { keepLocalTime: !e.moment });
+      return inTz.toMillis() === snappedMs;
+    });
+
+    if (snappedEntry?.parsed?.comment) {
+      l2.text(snappedEntry.parsed.comment)
+        .x(snappedX + (leftHalf ? 1 : -1) * labelPadding)
+        .y(y + 57)
+        .font({
+          anchor: leftHalf ? "start" : "end",
+          weight: "bold",
+        });
+    }
   }
 }
 
