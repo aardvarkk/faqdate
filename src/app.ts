@@ -428,12 +428,12 @@ const backdrop = document.querySelector(".modal-backdrop")! as HTMLDivElement;
 const modal = document.querySelector(".modal")! as HTMLDivElement;
 
 enum FormatMethods {
+  SECS = "toUnixInteger",
+  MILLIS = "toMillis",
   ISO = "toISO",
+  HTTP = "toHTTP",
   SQL = "toSQL",
   RFC2822 = "toRFC2822",
-  HTTP = "toHTTP",
-  MILLIS = "toMillis",
-  SECS = "toUnixInteger",
 }
 
 function formatName(method: FormatMethods) {
