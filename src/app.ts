@@ -457,11 +457,11 @@ function updateCrosshair() {
 
   l2.clear();
 
-  const crosshairInset = 4;
+  const crosshairInset = 6;
 
   l2.line(
     snappedX,
-    crosshairInset,
+    0,
     snappedX,
     timelines.clientHeight - crosshairInset,
   ).stroke({
