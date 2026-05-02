@@ -346,18 +346,26 @@ function snappedTimeAt(offsetX: number) {
 }
 
 function updateCrosshair() {
-  if (!offsetX) {
+  if (offsetX === undefined || offsetY === undefined) {
     return;
   }
 
   const h = timelines.clientHeight / timezones.length;
   const { snappedMs, snappedX } = snappedTimeAt(offsetX);
+  const hoveredTzIdx = Math.min(
+    timezones.length - 1,
+    Math.max(0, Math.floor(offsetY / h))
+  );
 
   l2.clear();
 
   l2.line(snappedX, 0, snappedX, timelines.clientHeight).stroke({
     color: "#666",
   });
+  l2.circle(10)
+    .center(snappedX, hoveredTzIdx * h + h / 2)
+    .fill("#bbb")
+    .stroke({ color: "#666", width: 2 });
 
   const t = DateTime.fromMillis(snappedMs);
 
