@@ -118,7 +118,7 @@ function drawTimelines() {
 
     tl.rect(w - insetX * 2, h - insetY * 2)
       .move(insetX, idx * h + insetY)
-      .fill("none")
+      .fill("white")
       .stroke({ color: "#d3d3d3", width: 2 });
 
     // Main horizontal
@@ -209,7 +209,7 @@ function drawTimelines() {
     // Place box underneath matching background so crosshair doesn't interfere
     l3.rect(label.bbox().w + 10, label.bbox().h + 10)
       .center(label.bbox().cx, label.bbox().cy)
-      .fill("var(--bg-color)");
+      .fill("white");
   }
 
   // Clear existing buttons
