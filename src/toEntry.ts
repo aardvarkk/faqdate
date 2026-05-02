@@ -1,9 +1,13 @@
 import { DateTime, DateTimeOptions } from "luxon";
 
+export type ParsedDateTime = DateTime & {
+  comment?: string;
+};
+
 export type Entry = {
   line: number;
   text: string;
-  parsed: DateTime | undefined;
+  parsed: ParsedDateTime | undefined;
   moment: boolean; // True if it's an "absolute" time, false if it depends on offset/timezone
 };
 
@@ -52,8 +56,31 @@ function fromCustomFormat(text: string) {
   return undefined;
 }
 
+function extractComment(raw: string) {
+  const matches = [...raw.matchAll(/(^|\s)(#|\/\/|--|;)(?=\s|$)/g)];
+  if (matches.length === 0) {
+    return {
+      text: raw.trim(),
+      comment: undefined,
+    };
+  }
+
+  const match = matches[0];
+  const markerIdx = match.index! + match[1].length;
+  const text = raw.slice(0, markerIdx).trim();
+  const comment = raw.slice(markerIdx + match[2].length).trim();
+  return {
+    text,
+    comment: comment.length > 0 ? comment : undefined,
+  };
+}
+
+function withComment(parsed: DateTime, comment: string | undefined) {
+  return Object.assign(parsed, { comment }) as ParsedDateTime;
+}
+
 export function toEntry(raw: string, line: number): Entry {
-  const text = raw.trim();
+  const { text, comment } = extractComment(raw);
 
   const isNumber = /^\d+([.,]\d*)?$/.test(text);
 
@@ -67,7 +94,7 @@ export function toEntry(raw: string, line: number): Entry {
       return {
         line,
         text,
-        parsed: DateTime.fromMillis(number),
+        parsed: withComment(DateTime.fromMillis(number), comment),
         moment: true,
       };
     }
@@ -76,7 +103,7 @@ export function toEntry(raw: string, line: number): Entry {
       return {
         line,
         text,
-        parsed: DateTime.fromSeconds(number),
+        parsed: withComment(DateTime.fromSeconds(number), comment),
         moment: true,
       };
     }
@@ -94,42 +121,42 @@ export function toEntry(raw: string, line: number): Entry {
       return {
         line,
         text,
-        parsed: fromISO,
+        parsed: withComment(fromISO, comment),
         moment: isMoment(DateTime.fromISO, text),
       };
     } else if (fromHTTP.isValid) {
       return {
         line,
         text,
-        parsed: fromHTTP,
+        parsed: withComment(fromHTTP, comment),
         moment: isMoment(DateTime.fromHTTP, text),
       };
     } else if (fromRFC2822.isValid) {
       return {
         line,
         text,
-        parsed: fromRFC2822,
+        parsed: withComment(fromRFC2822, comment),
         moment: isMoment(DateTime.fromRFC2822, text),
       };
     } else if (fromSQL.isValid) {
       return {
         line,
         text,
-        parsed: fromSQL,
+        parsed: withComment(fromSQL, comment),
         moment: isMoment(DateTime.fromSQL, text),
       };
     } else if (fromCustom?.isValid) {
       return {
         line,
         text,
-        parsed: fromCustom,
+        parsed: withComment(fromCustom, comment),
         moment: false,
       };
     } else if (fromDate.toString() !== "Invalid Date") {
       return {
         line,
         text,
-        parsed: DateTime.fromJSDate(fromDate),
+        parsed: withComment(DateTime.fromJSDate(fromDate), comment),
         moment: !hasClockTime(text) || hasExplicitTimezone(text),
       };
     } else {

@@ -250,8 +250,8 @@ document.querySelector("body")!.onresize = refresh;
 
 const now = DateTime.now().startOf("minute");
 textarea.value = [
-  now.toISO({ suppressMilliseconds: true }),
-  now.toISODate(),
+  `${now.toISO({ suppressMilliseconds: true })} # page load`,
+  `${now.toISODate()} # midnight today`,
 ].join("\n");
 refresh();
 
