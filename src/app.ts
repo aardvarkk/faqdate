@@ -180,7 +180,7 @@ function drawTimelines() {
 
   // Write timezone labels and center times
   for (const [idx, tz] of timezones.entries()) {
-    const y = idx * h + 8;
+    const y = (idx + 1) * h - 18;
     // const timeStr = DateTime.fromMillis(minMs + range / 2, {
     //   zone: tz,
     // }).toISO();
