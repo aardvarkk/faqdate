@@ -14,6 +14,9 @@ let maxMs = -Number.MAX_VALUE;
 const textarea = document.getElementById("textarea") as HTMLTextAreaElement;
 const statuses = document.getElementById("statuses") as HTMLDivElement;
 const rangeLabel = document.getElementById("range-label") as HTMLDivElement;
+const timelineStatuses = document.getElementById(
+  "timeline-statuses",
+) as HTMLDivElement;
 const timelineTextarea = document.getElementById(
   "timeline-textarea",
 ) as HTMLTextAreaElement;
@@ -98,6 +101,12 @@ function statusBadge(valid: boolean, idx: number) {
   return container;
 }
 
+function statusSpacer() {
+  const container = document.createElement("div");
+  container.className = "status-container";
+  return container;
+}
+
 function updateStatus() {
   statuses.innerHTML = "";
   entries.forEach((e, idx) => {
@@ -127,8 +136,10 @@ function updateTimelineTextarea() {
     .map((entry) => entry);
 
   const timelineLines: Array<string> = [];
+  timelineStatuses.innerHTML = "";
   for (const [idx, entry] of sortedEntries.entries()) {
     timelineLines.push(entry.parsed?.comment ?? entry.raw);
+    timelineStatuses.appendChild(statusBadge(true, entry.line));
 
     const nextEntry = sortedEntries[idx + 1];
     if (!nextEntry) {
@@ -137,6 +148,7 @@ function updateTimelineTextarea() {
 
     const gapMs = nextEntry.parsed!.toMillis() - entry.parsed!.toMillis();
     timelineLines.push(`  ... ${formatRange(gapMs)} ...`);
+    timelineStatuses.appendChild(statusSpacer());
   }
 
   timelineTextarea.value = timelineLines.join("\n");
